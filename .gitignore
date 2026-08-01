@@ -1,0 +1,28 @@
+# Secrets
+.env
+**/.env
+*.key
+*.pem
+*.crt
+
+# Local overrides
+compose.override.yaml
+docker-compose.override.yml
+
+# Backups
+*.backup
+*.bak
+*.tar
+*.tar.gz
+*.zip
+
+# Logs and temporary files
+*.log
+tmp/
+.cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~

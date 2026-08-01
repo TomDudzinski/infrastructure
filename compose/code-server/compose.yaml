@@ -1,0 +1,19 @@
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      - "8443:8443"
+
+    volumes:
+      - /opt/ai/data/code-server/config:/config
+      - /opt/ai/projects:/config/workspace
+      - /opt/ai/notebooks:/config/workspace/notebooks
+      - /opt/ai/datasets:/config/workspace/datasets
+
+    shm_size: "1gb"
