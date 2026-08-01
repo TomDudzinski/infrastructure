@@ -1,6 +1,10 @@
 services:
   jupyter:
-    image: quay.io/jupyter/scipy-notebook:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: iza-jupyter:latest
     container_name: jupyter
     restart: unless-stopped
 
@@ -17,7 +21,9 @@ services:
       CHOWN_HOME_OPTS: "-R"
       NB_UID: "${NB_UID:-1000}"
       NB_GID: "${NB_GID:-1000}"
-
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     user: root
 
     volumes:
