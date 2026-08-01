@@ -71,3 +71,8 @@ jupyter:
 
 health:
 	@./scripts/healthcheck.sh
+
+.PHONY: server-status
+
+server-status:
+	@./scripts/server-status.sh
