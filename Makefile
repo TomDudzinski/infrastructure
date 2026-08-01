@@ -17,6 +17,14 @@ help:
 	@echo "  make ollama        Start Ollama"
 	@echo "  make open-webui    Start Open WebUI"
 	@echo "  make code-server   Start code-server"
+	@echo "  make install-host-deps       Install required host packages"
+	@echo "  make server-status           Show server status"
+	@echo "  make gpu                     Show NVIDIA GPU status"
+	@echo "  make sensors                 Show hardware sensor readings"
+	@echo "  make disk                    Show disk usage"
+	@echo "  make docker-usage            Show Docker disk usage"
+	@echo "  make benchmark               Benchmark the default Ollama model"
+	@echo "  make benchmark MODEL=name    Benchmark a selected Ollama model"
 
 up:
 	@for service in $(SERVICES); do \
@@ -76,3 +84,28 @@ health:
 
 server-status:
 	@./scripts/server-status.sh
+
+.PHONY: install-host-deps
+
+install-host-deps:
+	@sudo ./scripts/install-host-dependencies.sh
+
+.PHONY: server-status gpu benchmark sensors disk docker-usage
+
+server-status:
+	@./scripts/server-status.sh
+
+gpu:
+	@nvidia-smi
+
+benchmark:
+	@./scripts/benchmark-ollama.sh "$(or $(MODEL),llama3.2:1b)"
+
+sensors:
+	@sensors
+
+disk:
+	@df -h / /opt/ai
+
+docker-usage:
+	@docker system df
