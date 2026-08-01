@@ -1,0 +1,30 @@
+services:
+  jupyter:
+    image: quay.io/jupyter/scipy-notebook:latest
+    container_name: jupyter
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      - "${JUPYTER_PORT:-8888}:8888"
+
+    environment:
+      JUPYTER_TOKEN: "${JUPYTER_TOKEN}"
+      JUPYTER_ENABLE_LAB: "yes"
+      CHOWN_HOME: "yes"
+      CHOWN_HOME_OPTS: "-R"
+      NB_UID: "${NB_UID:-1000}"
+      NB_GID: "${NB_GID:-1000}"
+
+    user: root
+
+    volumes:
+      - /opt/ai/notebooks:/home/jovyan/work
+      - /opt/ai/data/jupyter:/home/jovyan/.jupyter
+      - /opt/ai/projects:/home/jovyan/projects
+      - /opt/ai/datasets:/home/jovyan/datasets
+      - /opt/ai/cache/jupyter:/home/jovyan/.cache
+
+    shm_size: "2gb"

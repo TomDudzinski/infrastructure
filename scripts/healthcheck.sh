@@ -30,9 +30,11 @@ check_container() {
 check_container "ollama"
 check_container "open-webui"
 check_container "code-server"
+check_container "jupyter"
 
 check_url "Ollama API" "http://127.0.0.1:11434/api/tags"
 check_url "Open WebUI" "http://127.0.0.1:3000"
 check_url "code-server" "http://127.0.0.1:8443"
+check_url "JupyterLab" "http://127.0.0.1:8888"
 
 exit "$failed"

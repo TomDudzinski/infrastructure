@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 COMPOSE_DIR := $(CURDIR)/compose
-SERVICES := ollama open-webui code-server
+SERVICES := ollama open-webui code-server jupyter
 
 .PHONY: help up down restart status logs pull update ps ollama open-webui code-server
 
@@ -64,6 +64,8 @@ open-webui:
 
 code-server:
 	@docker compose -f "$(COMPOSE_DIR)/code-server/compose.yaml" up -d
+jupyter:
+	@docker compose -f "$(COMPOSE_DIR)/jupyter/compose.yaml" up -d
 
 .PHONY: health
 
