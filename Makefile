@@ -127,3 +127,8 @@ backup-check:
 
 backup-check-full:
 	@bash -c 'source config/backup.env && restic check --read-data'
+
+.PHONY: backup-retention
+
+backup-retention:
+	@./scripts/backup-retention.sh

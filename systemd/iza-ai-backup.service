@@ -1,0 +1,18 @@
+[Unit]
+Description=Iza AI Server Restic Backup
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+User=tom
+Group=tom
+WorkingDirectory=/opt/ai/projects/infrastructure
+Environment=HOME=/home/tom
+ExecStart=/usr/bin/make backup
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+[Install]
+WantedBy=multi-user.target

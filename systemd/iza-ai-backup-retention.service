@@ -1,0 +1,14 @@
+[Unit]
+Description=Iza AI Restic Retention and Repository Check
+After=iza-ai-backup.service
+
+[Service]
+Type=oneshot
+User=tom
+Group=tom
+WorkingDirectory=/opt/ai/projects/infrastructure
+Environment=HOME=/home/tom
+ExecStart=/usr/bin/make backup-retention
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

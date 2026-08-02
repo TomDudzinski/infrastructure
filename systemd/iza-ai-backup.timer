@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Iza AI Server Backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=10m
+Persistent=true
+Unit=iza-ai-backup.service
+
+[Install]
+WantedBy=timers.target

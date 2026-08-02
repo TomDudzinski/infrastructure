@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Iza AI Backup Retention
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=iza-ai-backup-retention.service
+
+[Install]
+WantedBy=timers.target
