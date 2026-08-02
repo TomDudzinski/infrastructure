@@ -1,0 +1,43 @@
+# Git repositories
+.git
+**/.git/**
+
+# JavaScript dependencies
+node_modules
+**/node_modules/**
+
+# Python environments and cache
+.venv
+**/.venv/**
+venv
+**/venv/**
+__pycache__
+**/__pycache__/**
+*.pyc
+.pytest_cache
+.mypy_cache
+
+# General cache and temporary files
+.cache
+**/.cache/**
+tmp
+**/tmp/**
+*.tmp
+*.log
+
+# Secrets from infrastructure repository
+/opt/ai/projects/infrastructure/config/backup.env
+/opt/ai/projects/infrastructure/config/restic-password
+
+# Large reproducible data
+/opt/ai/models
+/opt/ai/cache
+/var/lib/docker
+
+# Local backup repository – never back it up into itself
+/opt/ai/backups/restic
+
+# Application caches
+cache
+**/cache/**
+/opt/ai/data/open-webui/cache

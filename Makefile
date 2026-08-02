@@ -80,11 +80,6 @@ jupyter:
 health:
 	@./scripts/healthcheck.sh
 
-.PHONY: server-status
-
-server-status:
-	@./scripts/server-status.sh
-
 .PHONY: install-host-deps
 
 install-host-deps:
@@ -109,3 +104,26 @@ disk:
 
 docker-usage:
 	@docker system df
+
+.PHONY: backup backup-config backup-data backup-report backup-list backup-check backup-check-full
+
+backup:
+	@./scripts/backup-all.sh
+
+backup-config:
+	@./scripts/backup-config.sh
+
+backup-data:
+	@./scripts/backup-data.sh
+
+backup-report:
+	@./scripts/backup-report.sh
+
+backup-list:
+	@bash -c 'source config/backup.env && restic snapshots'
+
+backup-check:
+	@bash -c 'source config/backup.env && restic check'
+
+backup-check-full:
+	@bash -c 'source config/backup.env && restic check --read-data'

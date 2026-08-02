@@ -26,3 +26,7 @@ tmp/
 .idea/
 *.swp
 *~
+
+# Restic secrets
+config/backup.env
+config/restic-password
