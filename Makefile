@@ -2,29 +2,60 @@ SHELL := /bin/bash
 
 COMPOSE_DIR := $(CURDIR)/compose
 SERVICES := ollama open-webui code-server jupyter
+DEFAULT_MODEL := llama3.2:1b
 
-.PHONY: help up down restart status logs pull update ps ollama open-webui code-server
+.PHONY: \
+	help \
+	up down restart status ps logs pull update \
+	ollama open-webui code-server jupyter \
+	health server-status gpu sensors disk docker-usage benchmark \
+	backup backup-config backup-data backup-report \
+	backup-list backup-check backup-check-full backup-retention \
+	install-host-deps
 
 help:
-	@echo "Available commands:"
-	@echo "  make up            Start all services"
-	@echo "  make down          Stop all services"
-	@echo "  make restart       Restart all services"
-	@echo "  make status        Show container status"
-	@echo "  make logs          Show recent logs"
-	@echo "  make pull          Pull newest images"
-	@echo "  make update        Pull and recreate services"
-	@echo "  make ollama        Start Ollama"
-	@echo "  make open-webui    Start Open WebUI"
-	@echo "  make code-server   Start code-server"
-	@echo "  make install-host-deps       Install required host packages"
-	@echo "  make server-status           Show server status"
-	@echo "  make gpu                     Show NVIDIA GPU status"
-	@echo "  make sensors                 Show hardware sensor readings"
-	@echo "  make disk                    Show disk usage"
-	@echo "  make docker-usage            Show Docker disk usage"
-	@echo "  make benchmark               Benchmark the default Ollama model"
-	@echo "  make benchmark MODEL=name    Benchmark a selected Ollama model"
+	@echo "HomeLab Infrastructure commands"
+	@echo ""
+	@echo "Application lifecycle:"
+	@echo "  make up                     Start all applications"
+	@echo "  make down                   Stop all applications"
+	@echo "  make restart                Restart all applications"
+	@echo "  make status                 Show running container status"
+	@echo "  make ps                     Alias for make status"
+	@echo "  make logs                   Show recent logs for all applications"
+	@echo "  make pull                   Pull the newest application images"
+	@echo "  make update                 Pull images and recreate applications"
+	@echo ""
+	@echo "Individual applications:"
+	@echo "  make ollama                 Start Ollama"
+	@echo "  make open-webui             Start Open WebUI"
+	@echo "  make code-server            Start code-server"
+	@echo "  make jupyter                Start JupyterLab"
+	@echo ""
+	@echo "Health and diagnostics:"
+	@echo "  make health                 Run application health checks"
+	@echo "  make server-status          Show the AI server status"
+	@echo "  make gpu                    Show NVIDIA GPU status"
+	@echo "  make sensors                Show hardware sensor readings"
+	@echo "  make disk                   Show disk usage"
+	@echo "  make docker-usage           Show Docker disk usage"
+	@echo "  make benchmark              Benchmark the default Ollama model"
+	@echo "  make benchmark MODEL=name   Benchmark a selected Ollama model"
+	@echo ""
+	@echo "Backup:"
+	@echo "  make backup                 Run the complete backup workflow"
+	@echo "  make backup-config          Back up configuration"
+	@echo "  make backup-data            Back up projects and application data"
+	@echo "  make backup-report          Create a backup and system report"
+	@echo "  make backup-list            List Restic snapshots"
+	@echo "  make backup-check           Check the Restic repository"
+	@echo "  make backup-check-full      Check all Restic repository data"
+	@echo "  make backup-retention       Apply the Restic retention policy"
+	@echo ""
+	@echo "Host setup:"
+	@echo "  make install-host-deps      Install required host packages"
+
+# Application lifecycle
 
 up:
 	@for service in $(SERVICES); do \
@@ -64,6 +95,8 @@ update:
 	@$(MAKE) pull
 	@$(MAKE) up
 
+# Individual applications
+
 ollama:
 	@docker compose -f "$(COMPOSE_DIR)/ollama/compose.yaml" up -d
 
@@ -72,29 +105,20 @@ open-webui:
 
 code-server:
 	@docker compose -f "$(COMPOSE_DIR)/code-server/compose.yaml" up -d
+
 jupyter:
 	@docker compose -f "$(COMPOSE_DIR)/jupyter/compose.yaml" up -d
 
-.PHONY: health
+# Health and diagnostics
 
 health:
 	@./scripts/healthcheck.sh
-
-.PHONY: install-host-deps
-
-install-host-deps:
-	@sudo ./scripts/install-host-dependencies.sh
-
-.PHONY: server-status gpu benchmark sensors disk docker-usage
 
 server-status:
 	@./scripts/server-status.sh
 
 gpu:
 	@nvidia-smi
-
-benchmark:
-	@./scripts/benchmark-ollama.sh "$(or $(MODEL),llama3.2:1b)"
 
 sensors:
 	@sensors
@@ -105,7 +129,10 @@ disk:
 docker-usage:
 	@docker system df
 
-.PHONY: backup backup-config backup-data backup-report backup-list backup-check backup-check-full
+benchmark:
+	@./scripts/benchmark-ollama.sh "$(or $(MODEL),$(DEFAULT_MODEL))"
+
+# Backup
 
 backup:
 	@./scripts/backup-all.sh
@@ -128,7 +155,10 @@ backup-check:
 backup-check-full:
 	@bash -c 'source config/backup.env && restic check --read-data'
 
-.PHONY: backup-retention
-
 backup-retention:
 	@./scripts/backup-retention.sh
+
+# Host setup
+
+install-host-deps:
+	@sudo ./scripts/install-host-dependencies.sh
