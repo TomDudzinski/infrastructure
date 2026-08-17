@@ -2,15 +2,18 @@
 
 ## Current phase
 
-Infrastructure inventory and project organization.
+Proxmox inventory and read-only Terraform bootstrap.
 
 ## Working
 
-- Proxmox dtcode
-- Proxmox dom
-- AI server iza
+- Proxmox VE 8.2.2 on `dtcode`
+- Proxmox VE 9.2.2 on `dom`
+- SSH automation from `iza` to both Proxmox hosts
+- Terraform 1.15.8 on `iza`
+- `bpg/proxmox` provider 0.111.1
+- read-only Terraform API connectivity to both Proxmox environments
+- AI server `iza`
 - QNAP
-- Terraform
 - Docker
 - Ollama
 - Open WebUI
@@ -19,22 +22,41 @@ Infrastructure inventory and project organization.
 - Restic local backup
 - QNAP NFS access
 
-## Existing Terraform resources
+## Terraform status
 
-- dns01
-- home01
-- forgejo01
-- npm01
-- tailscale-router
+- separate privilege-separated `PVEAuditor` tokens exist on `dtcode` and `dom`;
+- token secrets are stored locally on `iza` outside Git;
+- both API certificates were verified by SHA-256 fingerprint;
+- provider aliases `proxmox.dtcode` and `proxmox.dom` are configured;
+- a read-only plan successfully reported Proxmox versions `8.2.2` and `9.2.2`;
+- no Terraform state currently exists;
+- no previous Terraform code or state was found under `/opt/ai/projects`;
+- no existing VM or LXC has been imported into the new configuration;
+- `terraform apply` is not approved at this phase.
+
+## Existing infrastructure requiring controlled import review
+
+The following active resources on `dtcode` carry a `terraform` tag, but their previous Terraform state was not found:
+
+- `dns01`
+- `home01`
+- `forgejo01`
+- `npm01`
+- `tailscale-router`
+
+Additional stopped VMs and templates also require classification before any import decision.
 
 ## Current task
 
-Create documentation and inventory before further infrastructure changes.
+Document the verified Proxmox inventory and establish a safe Terraform baseline without modifying existing infrastructure.
 
 ## Next tasks
 
-1. Complete infrastructure inventory.
-2. Finish QNAP Restic backup.
-3. Design OpenBao.
-4. Create Ansible structure.
-5. Migrate home01 provisioning to Ansible as first test.
+1. Commit the read-only Terraform bootstrap and documentation.
+2. Document the full configuration and dependencies of each existing guest.
+3. Decide the Terraform state backend, locking, backup, and recovery model.
+4. Design a separate least-privilege management role and token.
+5. Select one low-risk resource for a controlled import test.
+6. Finish QNAP Restic backup.
+7. Design OpenBao.
+8. Create the Ansible structure.

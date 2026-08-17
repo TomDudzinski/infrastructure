@@ -30,8 +30,8 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 
 | Host | Type | Address | Operating system | Role | Status |
 |---|---|---|---|---|---|
-| `dtcode` | Physical server | `192.168.55.6` | Proxmox VE | Smaller virtualization host | Documented |
-| `dom` | Physical server | `192.168.55.3` | Proxmox VE | Main high-resource virtualization host | Documented |
+| `dtcode` | Physical server | `192.168.55.6` | Proxmox VE 8.2.2 | Smaller virtualization host | Verified |
+| `dom` | Physical server | `192.168.55.3` | Proxmox VE 9.2.2 | Main high-resource virtualization host | Verified |
 | `iza` | Physical server | `192.168.55.7` | Ubuntu 26.04 LTS | Local AI and LLM platform | Verified |
 | `qnap` | NAS | `192.168.55.5` | QTS 5.1.9.2954 | Central storage and backup target | Documented |
 
@@ -42,24 +42,33 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Property | Value |
 |---|---|
 | Address | `192.168.55.6` |
+| Proxmox version | `8.2.2` |
+| Cluster | Single-node cluster `test` |
+| Corosync member address | `192.168.55.150` |
 | Role | Smaller virtualization host |
-| Known workloads | `dns01`, `home01`, `forgejo01`, `npm01`, `tailscale-router` |
-| Current management | Proxmox VE and existing Terraform configuration |
+| Storage | `local`, `local-lvm` |
+| Network bridge | `vmbr0` |
+| Known workloads | VM IDs `101`, `103`-`107`, `201`, `202`, `999`; LXC ID `102` |
+| Current management | Proxmox VE; previous Terraform state and code were not found |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dtcode.md` |
-| Verification status | Documented; live inventory required |
+| Verification status | Live inventory verified on `2026-08-17` |
 
 ### dom
 
 | Property | Value |
 |---|---|
 | Address | `192.168.55.3` |
+| Proxmox version | `9.2.2` |
+| Cluster | Standalone host |
 | Role | Main high-resource virtualization host |
-| Known workloads | Inventory required |
-| Current management | Proxmox VE; detailed state requires verification |
+| Storage | `local`, `local-lvm` |
+| Network bridge | `vmbr0` |
+| Known workloads | None at the time of verification |
+| Current management | Proxmox VE; read-only Terraform provider connectivity established |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dom.md` |
-| Verification status | Documented; live inventory required |
+| Verification status | Live inventory verified on `2026-08-17` |
 
 ## AI server
 
@@ -128,17 +137,22 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Documentation | `docs/qnap/README.md` |
 | Verification status | NFS mount verified from `iza`; remaining NAS configuration requires review |
 
-## Virtual machines
+## Virtual machines and containers
 
 The following machines already exist and must be preserved. Their live Proxmox configuration, dependencies, persistent data, and backup status require separate verification before significant changes.
 
-| VM ID | Name | Address | Proxmox host | Purpose | Management status | Documentation |
-|---:|---|---|---|---|---|---|
-| 102 | `dns01` | `192.168.55.10` | `dtcode` | Technitium DNS | Existing; Terraform state requires verification | `docs/vms/dns01.md` |
-| 103 | `home01` | `192.168.55.20` | `dtcode` | Homepage dashboard | Existing Terraform resource documented | `docs/vms/home01.md` |
-| 105 | `forgejo01` | `192.168.55.22` | `dtcode` | Primary Forgejo Git server | Existing; Terraform state requires verification | `docs/vms/forgejo01.md` |
-| 106 | `npm01` | `192.168.55.23` | `dtcode` | Nginx Proxy Manager | Existing Terraform resource documented | `docs/vms/npm01.md` |
-| 107 | `tailscale-router` | `192.168.55.4` | `dtcode` | Tailscale VPN and subnet router | Existing Terraform resource documented | `docs/vms/tailscale-router.md` |
+| ID | Type | Name | Address | Proxmox host | State | Management status | Documentation |
+|---:|---|---|---|---|---|---|---|
+| 101 | VM template | `ubuntu-2404` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
+| 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/dns01.md` |
+| 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/home01.md` |
+| 104 | VM | `wiki01` | Requires verification | `dtcode` | Stopped | Existing; unmanaged by current state | Documentation required |
+| 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/forgejo01.md` |
+| 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/npm01.md` |
+| 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/tailscale-router.md` |
+| 201 | VM | `ubuntu-test` | Requires verification | `dtcode` | Stopped | Existing; unmanaged by current state | Documentation required |
+| 202 | VM | `tailscale-router` | Requires verification | `dtcode` | Stopped | Existing; unmanaged by current state | Documentation required |
+| 999 | VM template | `ubuntu-temp` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
 
 ## Backup inventory
 
@@ -156,7 +170,7 @@ The following machines already exist and must be preserved. Their live Proxmox c
 
 | Area | Current state | Target state |
 |---|---|---|
-| Infrastructure lifecycle | Existing Terraform resources and manual infrastructure | Terraform |
+| Infrastructure lifecycle | Existing resources; read-only Terraform connectivity to both Proxmox environments | Terraform after controlled inventory and import |
 | Operating system configuration | Manual configuration and scripts | Ansible |
 | Containerized applications | Docker Compose | Docker Compose |
 | Secrets | Existing local mechanisms | OpenBao |
@@ -169,10 +183,9 @@ The following machines already exist and must be preserved. Their live Proxmox c
 The following information still requires live verification:
 
 - complete hardware inventory for `dtcode` and `dom`
-- Proxmox VE versions and storage configuration
-- all virtual machines and LXC containers on both Proxmox hosts
 - CPU, memory, disk, network, and startup configuration for each VM and LXC
-- workloads currently running on `dom`
+- purpose and disposition of stopped VMs `104`, `201`, and `202`
+- relationship between templates `101` and `999`
 - physical network devices, switches, and management interfaces
 - DHCP configuration and address reservations
 - complete DNS zone and reverse proxy inventory
