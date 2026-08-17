@@ -34,12 +34,9 @@ Verified on `2026-08-17`:
 | 101 | VM template | `ubuntu-2404` | Stopped | Template |
 | 102 | LXC | `dns01` | Running | Tagged `dns`, `technitium`, `terraform` |
 | 103 | VM | `home01` | Running | Tagged `dashboard`, `homepage`, `terraform` |
-| 104 | VM | `wiki01` | Stopped | Purpose and disposition require review |
 | 105 | VM | `forgejo01` | Running | Tagged `forgejo`, `git`, `terraform` |
 | 106 | VM | `npm01` | Running | Tagged `nginx`, `proxy`, `ssl`, `terraform` |
 | 107 | VM | `tailscale-router` | Running | Tagged `tailscale`, `terraform`, `vpn` |
-| 201 | VM | `ubuntu-test` | Stopped | Purpose and disposition require review |
-| 202 | VM | `tailscale-router` | Stopped | Possible obsolete or test instance; review required |
 | 999 | VM template | `ubuntu-temp` | Stopped | Template relationship with ID 101 requires review |
 
 ## Management

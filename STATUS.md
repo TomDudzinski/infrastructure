@@ -44,19 +44,24 @@ The following active resources on `dtcode` carry a `terraform` tag, but their pr
 - `npm01`
 - `tailscale-router`
 
-Additional stopped VMs and templates also require classification before any import decision.
+The remaining stopped resources are templates `101` and `999`. Their relationship and intended future use require verification before either template is managed by Terraform.
+
+Obsolete stopped VMs `104`, `201`, and `202` were removed from `dtcode` on `2026-08-17`.
 
 ## Current task
 
-Document the verified Proxmox inventory and establish a safe Terraform baseline without modifying existing infrastructure.
+Design the Terraform state storage, locking, backup, restore, and recovery model before introducing managed infrastructure resources.
 
 ## Next tasks
 
-1. Commit the read-only Terraform bootstrap and documentation.
-2. Document the full configuration and dependencies of each existing guest.
-3. Decide the Terraform state backend, locking, backup, and recovery model.
-4. Design a separate least-privilege management role and token.
-5. Select one low-risk resource for a controlled import test.
-6. Finish QNAP Restic backup.
-7. Design OpenBao.
-8. Create the Ansible structure.
+1. Define and document separate Terraform state boundaries for `dtcode` and `dom`.
+2. Configure state storage outside the Git repository.
+3. Add encrypted state backup to the existing Restic and QNAP workflow.
+4. Perform and document a Terraform state restore test.
+5. Design a new minimal disposable VM for controlled Terraform lifecycle testing.
+6. Design a separate least-privilege Proxmox management role and token.
+7. Create, inspect, modify, and destroy the disposable VM through an explicitly approved Terraform workflow.
+8. Document the full configuration and dependencies of each existing production guest before considering controlled imports.
+9. Finish the remaining QNAP Restic backup work.
+10. Design OpenBao.
+11. Create the Ansible structure.

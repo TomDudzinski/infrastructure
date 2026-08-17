@@ -48,7 +48,7 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Role | Smaller virtualization host |
 | Storage | `local`, `local-lvm` |
 | Network bridge | `vmbr0` |
-| Known workloads | VM IDs `101`, `103`-`107`, `201`, `202`, `999`; LXC ID `102` |
+| Known workloads | VM IDs `101`, `103`, `105`-`107`, `999`; LXC ID `102` |
 | Current management | Proxmox VE; previous Terraform state and code were not found |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dtcode.md` |
@@ -146,12 +146,9 @@ The following machines already exist and must be preserved. Their live Proxmox c
 | 101 | VM template | `ubuntu-2404` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
 | 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/dns01.md` |
 | 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/home01.md` |
-| 104 | VM | `wiki01` | Requires verification | `dtcode` | Stopped | Existing; unmanaged by current state | Documentation required |
 | 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/forgejo01.md` |
 | 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/npm01.md` |
 | 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/tailscale-router.md` |
-| 201 | VM | `ubuntu-test` | Requires verification | `dtcode` | Stopped | Existing; unmanaged by current state | Documentation required |
-| 202 | VM | `tailscale-router` | Requires verification | `dtcode` | Stopped | Existing; unmanaged by current state | Documentation required |
 | 999 | VM template | `ubuntu-temp` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
 
 ## Backup inventory
@@ -184,7 +181,6 @@ The following information still requires live verification:
 
 - complete hardware inventory for `dtcode` and `dom`
 - CPU, memory, disk, network, and startup configuration for each VM and LXC
-- purpose and disposition of stopped VMs `104`, `201`, and `202`
 - relationship between templates `101` and `999`
 - physical network devices, switches, and management interfaces
 - DHCP configuration and address reservations
