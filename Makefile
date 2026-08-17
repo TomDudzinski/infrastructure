@@ -11,7 +11,7 @@ DEFAULT_MODEL := llama3.2:1b
 	health server-status gpu sensors disk docker-usage benchmark \
 	backup backup-config backup-data backup-report \
 	backup-list backup-check backup-check-full backup-retention \
-	install-host-deps
+	install-host-deps install-terraform
 
 help:
 	@echo "HomeLab Infrastructure commands"
@@ -54,6 +54,7 @@ help:
 	@echo ""
 	@echo "Host setup:"
 	@echo "  make install-host-deps      Install required host packages"
+	@echo "  make install-terraform      Install Terraform from the HashiCorp repository"
 
 # Application lifecycle
 
@@ -162,3 +163,6 @@ backup-retention:
 
 install-host-deps:
 	@sudo ./scripts/install-host-dependencies.sh
+
+install-terraform:
+	@sudo ./scripts/install-terraform.sh

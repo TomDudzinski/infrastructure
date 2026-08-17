@@ -106,6 +106,7 @@ Private key material is stored outside the repository. See [Automation SSH acces
 | NVIDIA Container Toolkit | Installed and operational |
 | Restic | Installed; version requires documentation |
 | Git | Installed; version requires documentation |
+| Terraform | `1.15.8`; installed from the official HashiCorp APT repository |
 
 ## Containerized applications
 

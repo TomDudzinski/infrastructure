@@ -227,6 +227,12 @@ make backup-retention
 make install-host-deps
 ```
 
+Install Terraform from the official HashiCorp repository:
+
+```bash
+make install-terraform
+```
+
 ## Documentation
 
 Start with:
