@@ -84,6 +84,18 @@ Docker bridge addresses are dynamically managed by Docker and are not treated as
 
 The network interface name, MAC address, DNS resolver configuration, and address assignment method still require documentation.
 
+### Outbound SSH automation
+
+The `tom` account uses a dedicated key for SSH automation from `iza` to the Proxmox hosts:
+
+- private key: `~/.ssh/homelab_automation_ed25519`;
+- public key: `~/.ssh/homelab_automation_ed25519.pub`;
+- host configuration: `~/.ssh/config.d/homelab.conf`;
+- destinations: `dtcode` and `dom`;
+- current remote user: `root`.
+
+Private key material is stored outside the repository. See [Automation SSH access](../security/automation-ssh.md).
+
 ## Platform software
 
 | Software | Version or state |
@@ -264,6 +276,8 @@ Open WebUI, JupyterLab, and other clients depend on the Ollama API for local mod
 - Published container ports are currently bound to all host interfaces.
 - Reverse proxy, TLS, firewall rules, and direct-port exposure require a separate security review.
 - Access to the QNAP NFS export must remain restricted to approved clients.
+- The passphrase-free SSH automation key must remain readable only by `tom` and must never be committed to Git.
+- Root SSH access on the Proxmox hosts is a bootstrap configuration and should be replaced with a least-privilege automation identity where practical.
 
 ## Recovery outline
 
