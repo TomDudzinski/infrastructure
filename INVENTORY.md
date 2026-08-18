@@ -12,7 +12,7 @@ Detailed configuration, dependencies, persistent data, backup, and recovery info
 | Documented | Recorded in the project but not confirmed directly during the latest inventory review |
 | Planned | Target state that is not implemented yet |
 
-Inventory review date: `2026-08-17`
+Inventory review date: `2026-08-18`
 
 ## Network
 
@@ -64,11 +64,11 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Role | Main high-resource virtualization host |
 | Storage | `local`, `local-lvm` |
 | Network bridge | `vmbr0` |
-| Known workloads | None at the time of verification |
-| Current management | Proxmox VE; read-only Terraform provider connectivity established |
+| Known workloads | VM ID `201` (`mysql01`) |
+| Current management | Proxmox VE; Terraform for managed resources; Ansible for guest configuration |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dom.md` |
-| Verification status | Live inventory verified on `2026-08-17` |
+| Verification status | Live inventory verified on `2026-08-18` |
 
 ## AI server
 
@@ -150,6 +150,7 @@ The following machines already exist and must be preserved. Their live Proxmox c
 | 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/npm01.md` |
 | 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/tailscale-router.md` |
 | 999 | VM template | `ubuntu-temp` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
+| 201 | VM | `mysql01` | `192.168.55.21` | `dom` | Running | Managed by current Terraform state and Ansible | `docs/vms/mysql01.md` |
 
 ## Backup inventory
 
@@ -160,15 +161,17 @@ The following machines already exist and must be preserved. Their live Proxmox c
 | Backup schedule | Daily at approximately 03:00 UTC | Verified on `iza` |
 | Retention schedule | Weekly, Sunday at approximately 04:00 UTC | Verified on `iza` |
 | QNAP mount | `/mnt/qnap-backup` | Verified on `iza` |
-| Restore test | No current result recorded | Verification required |
+| QNAP Restic repository | `/mnt/qnap-backup/AI/iza/restic` | Verified on `2026-08-17` |
+| Infrastructure restore test | Successful restore from snapshot `aa5c516e` | Verified on `2026-08-17` |
+| MySQL backup | Not configured | Required before production use |
 | Backup monitoring | No central alerting documented | Verification required |
 
 ## Management inventory
 
 | Area | Current state | Target state |
 |---|---|---|
-| Infrastructure lifecycle | Existing resources; read-only Terraform connectivity to both Proxmox environments | Terraform after controlled inventory and import |
-| Operating system configuration | Manual configuration and scripts | Ansible |
+| Infrastructure lifecycle | New resources on `dom` managed by Terraform; existing `dtcode` resources remain outside current state | Terraform for new resources and controlled imports |
+| Operating system configuration | Ansible manages `mysql01` | Extend Ansible coverage to approved guests |
 | Containerized applications | Docker Compose | Docker Compose |
 | Secrets | Existing local mechanisms | OpenBao |
 | Backup | Restic with local and QNAP-related infrastructure | Restic and QNAP |
@@ -187,6 +190,8 @@ The following information still requires live verification:
 - complete DNS zone and reverse proxy inventory
 - persistent data locations for services outside `iza`
 - backup coverage for every VM, LXC, service, and physical host
-- successful restore-test dates and results
-- actual Terraform state compared with existing Proxmox resources
+- database-aware backup and restore procedure for `mysql01`
+- monitoring and alerting for `mysql01` and MySQL
+- DNS verification for `mysql01.home.lab`
+- controlled comparison and import plan for existing `dtcode` resources
 - current secret locations before migration to OpenBao

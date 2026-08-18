@@ -19,3 +19,25 @@ provider "proxmox" {
   # Replace this with trusted local PKI certificates in a later stage.
   insecure = true
 }
+
+provider "proxmox" {
+  alias = "dtcode_manage"
+
+  endpoint  = "https://192.168.55.6:8006/"
+  api_token = var.dtcode_manage_api_token
+
+  # The self-signed certificate fingerprint was verified out of band.
+  # Replace this with trusted local PKI certificates in a later stage.
+  insecure = true
+}
+
+provider "proxmox" {
+  alias = "dom_manage"
+
+  endpoint  = "https://192.168.55.3:8006/"
+  api_token = var.dom_manage_api_token
+
+  # The self-signed certificate fingerprint was verified out of band.
+  # Replace this with trusted local PKI certificates in a later stage.
+  insecure = true
+}

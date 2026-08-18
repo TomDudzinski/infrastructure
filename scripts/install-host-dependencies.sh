@@ -9,6 +9,7 @@ if [[ "${EUID}" -ne 0 ]]; then
 fi
 
 PACKAGES=(
+    ansible-core
     btop
     ca-certificates
     curl
@@ -19,6 +20,7 @@ PACKAGES=(
     make
     nvtop
     openssl
+    ripgrep
     smartmontools
     sysstat
     tree

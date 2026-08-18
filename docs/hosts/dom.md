@@ -1,16 +1,18 @@
 # dom
 
-## Type
+## Purpose
 
-Proxmox VE host.
+`dom` is the main high-resource Proxmox VE virtualization host in the HomeLab environment.
 
-## Address
+## Identity
 
-`192.168.55.3`
-
-## Role
-
-Main high-resource virtualization server.
+| Property | Value |
+|---|---|
+| Hostname | `dom` |
+| Address | `192.168.55.3` |
+| Type | Physical server |
+| Role | Main virtualization host |
+| Cluster status | Standalone host |
 
 ## Platform
 
@@ -18,36 +20,30 @@ Verified on `2026-08-17`:
 
 | Property | Value |
 |---|---|
+| Hardware | HP ProLiant DL360p Gen8 |
 | Proxmox VE | `9.2.2` |
+| Operating system | Debian 13 |
 | Running kernel | `7.0.2-6-pve` |
-| Cluster | Standalone host |
 | CPU allocation visible to PVE | 32 logical CPUs |
 | Memory visible to PVE | Approximately 189 GiB |
 | Storage | `local`, `local-lvm` |
 | Network bridge | `vmbr0` |
-| VM and LXC inventory | Empty at verification time |
+| Bridge address | `192.168.55.3/24` |
 
-## Intended workloads
+The server firmware is old and requires a separate hardware and firmware review before production use.
 
-- resource-intensive infrastructure services
-- OpenBao
-- future databases
-- future AI supporting services
-- workloads that require more CPU or RAM
+## Storage
 
-Intended workloads are plans, not deployed services.
+| Storage | Type | Purpose |
+|---|---|---|
+| `local` | Directory | ISO images, cloud images, templates, backups and imports |
+| `local-lvm` | LVM thin pool | VM and LXC disks |
 
-## Management
+Terraform currently stores the verified Ubuntu 24.04 cloud image on `local` and the `mysql01` system disk on `local-lvm`.
 
-SSH automation from `iza` currently uses the `root` account and the dedicated `homelab-automation@iza` key. This is a bootstrap configuration; a least-privilege automation identity is the target state.
+## Network
 
-Terraform provider connectivity from `iza` is operational through a privilege-separated `PVEAuditor` token. The current Terraform configuration is read-only.
+The primary Proxmox bridge is:
 
-Target management:
-
-Terraform + Ansible.
-
-See:
-
-- [Automation SSH access](../security/automation-ssh.md)
-- [Terraform Proxmox access](../security/terraform-proxmox-access.md)
+```text
+vmbr0

@@ -1,0 +1,8 @@
+---
+server_hostname: mysql01
+server_fqdn: mysql01.home.lab
+
+server_ipv4_address: 192.168.55.21
+server_ipv4_gateway: 192.168.55.1
+server_dns_servers:
+  - 192.168.55.10

@@ -1,0 +1,9 @@
+---
+- name: Bootstrap mysql01
+  hosts: mysql01
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: qemu_guest_agent
+    - role: mysql_server

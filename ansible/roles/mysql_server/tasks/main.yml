@@ -1,0 +1,40 @@
+---
+- name: Install MySQL server dependencies
+  ansible.builtin.apt:
+    name:
+      - mysql-server
+      - python3-pymysql
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Configure MySQL server
+  ansible.builtin.template:
+    src: homelab.cnf.j2
+    dest: /etc/mysql/mysql.conf.d/99-homelab.cnf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart MySQL
+
+- name: Ensure MySQL is enabled and running
+  ansible.builtin.service:
+    name: mysql
+    enabled: true
+    state: started
+
+- name: Remove anonymous MySQL users
+  ansible.mysql.mysql_user:
+    name: ""
+    host_all: true
+    state: absent
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    check_implicit_admin: true
+  no_log: true
+
+- name: Remove MySQL test database
+  ansible.mysql.mysql_db:
+    name: test
+    state: absent
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    check_implicit_admin: true
