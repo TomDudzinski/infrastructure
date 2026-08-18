@@ -38,3 +38,13 @@
     state: absent
     login_unix_socket: /var/run/mysqld/mysqld.sock
     check_implicit_admin: true
+
+- name: Create configured MySQL databases
+  ansible.mysql.mysql_db:
+    name: "{{ item.name }}"
+    state: present
+    encoding: "{{ item.encoding | default('utf8mb4') }}"
+    collation: "{{ item.collation | default('utf8mb4_unicode_ci') }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    check_implicit_admin: true
+  loop: "{{ mysql_databases | default([]) }}"

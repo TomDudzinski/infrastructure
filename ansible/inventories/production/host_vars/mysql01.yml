@@ -6,3 +6,8 @@ server_ipv4_address: 192.168.55.21
 server_ipv4_gateway: 192.168.55.1
 server_dns_servers:
   - 192.168.55.10
+
+mysql_databases:
+  - name: ai_demo
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
