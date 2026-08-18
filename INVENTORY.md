@@ -49,7 +49,7 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Storage | `local`, `local-lvm` |
 | Network bridge | `vmbr0` |
 | Known workloads | VM IDs `101`, `103`, `105`-`107`, `999`; LXC ID `102` |
-| Current management | Proxmox VE; previous Terraform state and code were not found |
+| Current management | Proxmox VE; Terraform and Ansible manage approved new resources including `bao01`; existing workloads remain outside the current Terraform state |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dtcode.md` |
 | Verification status | Live inventory verified on `2026-08-17` |
@@ -146,11 +146,12 @@ The following machines already exist and must be preserved. Their live Proxmox c
 | 101 | VM template | `ubuntu-2404` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
 | 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/dns01.md` |
 | 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/home01.md` |
+| 104 | VM | `bao01` | `192.168.55.24` | `dtcode` | Running | Managed by current Terraform state and Ansible | `docs/vms/bao01.md` |
 | 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/forgejo01.md` |
 | 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/npm01.md` |
 | 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/tailscale-router.md` |
+| 201 | VM | mysql01 | 192.168.55.21 | dom | Running | Managed by current Terraform state and Ansible | docs/vms/mysql01.md |
 | 999 | VM template | `ubuntu-temp` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
-| 201 | VM | `mysql01` | `192.168.55.21` | `dom` | Running | Managed by current Terraform state and Ansible | `docs/vms/mysql01.md` |
 
 ## Backup inventory
 
@@ -173,7 +174,7 @@ The following machines already exist and must be preserved. Their live Proxmox c
 | Infrastructure lifecycle | New resources on `dom` managed by Terraform; existing `dtcode` resources remain outside current state | Terraform for new resources and controlled imports |
 | Operating system configuration | Ansible manages `mysql01` | Extend Ansible coverage to approved guests |
 | Containerized applications | Docker Compose | Docker Compose |
-| Secrets | Existing local mechanisms | OpenBao |
+| Secrets | OpenBao deployed on `bao01`; migration of existing secrets is in progress | OpenBao as the central secrets-management and PKI platform |
 | Backup | Restic with local and QNAP-related infrastructure | Restic and QNAP |
 | Documentation | Partial repository documentation | Complete infrastructure documentation |
 | Source control | Forgejo with a public GitHub mirror | Forgejo as source of truth with synchronized mirror |
@@ -194,4 +195,4 @@ The following information still requires live verification:
 - monitoring and alerting for `mysql01` and MySQL
 - DNS verification for `mysql01.home.lab`
 - controlled comparison and import plan for existing `dtcode` resources
-- current secret locations before migration to OpenBao
+- complete inventory of existing secrets that still require controlled migration into OpenBao

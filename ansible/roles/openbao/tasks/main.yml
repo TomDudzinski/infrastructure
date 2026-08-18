@@ -1,0 +1,66 @@
+---
+- name: Check installed OpenBao version
+  ansible.builtin.command:
+    cmd: bao version
+  register: openbao_installed_version
+  changed_when: false
+  failed_when: false
+
+- name: Download OpenBao package
+  ansible.builtin.get_url:
+    url: "{{ openbao_deb_url }}"
+    dest: "/tmp/{{ openbao_deb_filename }}"
+    checksum: "sha256:{{ openbao_deb_sha256 }}"
+    mode: "0644"
+  when:
+    - openbao_installed_version.rc != 0
+      or openbao_version not in openbao_installed_version.stdout
+
+- name: Install OpenBao package
+  ansible.builtin.apt:
+    deb: "/tmp/{{ openbao_deb_filename }}"
+    state: present
+  when:
+    - openbao_installed_version.rc != 0
+      or openbao_version not in openbao_installed_version.stdout
+
+- name: Create OpenBao data directory
+  ansible.builtin.file:
+    path: /opt/openbao/data
+    state: directory
+    owner: openbao
+    group: openbao
+    mode: "0700"
+
+- name: Deploy OpenBao configuration
+  ansible.builtin.template:
+    src: openbao.hcl.j2
+    dest: /etc/openbao/openbao.hcl
+    owner: root
+    group: openbao
+    mode: "0640"
+  notify: Restart OpenBao
+
+- name: Check OpenBao TLS certificate
+  ansible.builtin.stat:
+    path: /etc/openbao/tls/bao01-fullchain.crt
+  register: openbao_tls_certificate
+
+- name: Check OpenBao TLS private key
+  ansible.builtin.stat:
+    path: /etc/openbao/tls/bao01.key
+  register: openbao_tls_private_key
+
+- name: Fail when OpenBao TLS files are missing
+  ansible.builtin.fail:
+    msg: >-
+      OpenBao TLS certificate or private key is missing.
+      Provision TLS files before starting OpenBao.
+  when:
+    - not openbao_tls_certificate.stat.exists
+      or not openbao_tls_private_key.stat.exists
+- name: Ensure OpenBao service is enabled and started
+  ansible.builtin.systemd:
+    name: openbao
+    enabled: true
+    state: started

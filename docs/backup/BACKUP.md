@@ -264,6 +264,138 @@ Before production use, implement:
 - an actual restore test;
 - documentation of recovery time and recovery point expectations.
 
+## OpenBao backup
+
+OpenBao on `bao01` uses integrated Raft storage.
+
+The live Raft data directory is:
+
+```text
+/opt/openbao/data
+```
+
+Do not treat a live filesystem copy of this directory as the primary OpenBao backup method.
+
+A consistent OpenBao Raft snapshot is created through the OpenBao API.
+
+### Raft snapshot
+
+The first verified Raft snapshot was created on `2026-08-18`.
+
+The snapshot is created on `iza` and temporarily stored under:
+
+```text
+/opt/ai/backups/openbao
+```
+
+The plaintext snapshot contains sensitive OpenBao data and must not be retained as the long-term backup copy.
+
+After creation, the snapshot is encrypted with the dedicated OpenBao recovery GPG key:
+
+```text
+openbao-recovery@home.lab
+```
+
+Only the encrypted snapshot is retained.
+
+Local encrypted snapshot location:
+
+```text
+/opt/ai/backups/openbao/*.snap.gpg
+```
+
+QNAP encrypted snapshot location:
+
+```text
+/mnt/qnap-backup/AI/openbao/raft/*.snap.gpg
+```
+
+The plaintext `.snap` file must be removed after successful encryption verification.
+
+### Snapshot verification
+
+After encryption, decrypt the encrypted snapshot to standard output and calculate its SHA-256 checksum:
+
+```bash
+gpg \
+  --decrypt \
+  /opt/ai/backups/openbao/bao01-raft-YYYYMMDD-HHMMSS.snap.gpg \
+  2>/dev/null \
+  | sha256sum
+```
+
+Compare it with the checksum of the original plaintext snapshot before deleting the plaintext file.
+
+After copying the encrypted snapshot to QNAP, compare the local encrypted file and QNAP copy:
+
+```bash
+sha256sum \
+  /opt/ai/backups/openbao/bao01-raft-YYYYMMDD-HHMMSS.snap.gpg \
+  /mnt/qnap-backup/AI/openbao/raft/bao01-raft-YYYYMMDD-HHMMSS.snap.gpg
+```
+
+The checksums must match.
+
+This verification was completed successfully for the first snapshot on `2026-08-18`.
+
+### Initialization and unseal recovery material
+
+The encrypted OpenBao initialization material is stored locally at:
+
+```text
+/opt/ai/secrets/openbao/bao01-init.json.gpg
+```
+
+A recovery copy is stored on QNAP at:
+
+```text
+/mnt/qnap-backup/AI/openbao/bao01-init.json.gpg
+```
+
+The initialization material contains recovery-critical information and must remain encrypted at rest.
+
+The dedicated GPG recovery private key must be backed up independently from the encrypted OpenBao data.
+
+Do not store decrypted initialization data, unseal shares, tokens, or the GPG private key in Git.
+
+### Root CA recovery material
+
+The HomeLab Root CA certificate and encrypted private key have a recovery copy on QNAP:
+
+```text
+/mnt/qnap-backup/AI/pki/root-ca/home-lab-root-ca.crt
+/mnt/qnap-backup/AI/pki/root-ca/home-lab-root-ca.key
+```
+
+The Root CA private key is encrypted with a passphrase and has restrictive filesystem permissions.
+
+The Root CA passphrase must not be stored in Git or embedded in backup scripts.
+
+Recovery requires both:
+
+- access to the encrypted Root CA private key;
+- access to the corresponding passphrase.
+
+The encrypted Root CA private key was successfully opened with the correct passphrase during verification on `2026-08-18`.
+
+### OpenBao restore status
+
+Raft snapshot creation, encryption, decryption verification, QNAP copy, and checksum verification have been tested successfully.
+
+A complete Raft snapshot restore has **not yet been performed**.
+
+Until an actual restore test is completed, the OpenBao disaster-recovery process must not be considered fully verified.
+
+A restore test must be performed in a controlled environment without overwriting the working `bao01` instance.
+
+See:
+
+```text
+docs/procedures/openbao-recovery.md
+docs/security/pki.md
+docs/vms/bao01.md
+```
+
 ## Retention
 
 The existing local Restic workflow has a separate retention script:
@@ -312,3 +444,6 @@ Central alerting is not currently configured.
 - test MySQL restore;
 - implement backup monitoring and alerting;
 - document complete disaster-recovery procedures.
+- automate OpenBao Raft snapshots;
+- define OpenBao snapshot retention;
+- test OpenBao Raft snapshot restore;

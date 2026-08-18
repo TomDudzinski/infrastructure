@@ -1,0 +1,8 @@
+---
+server_hostname: bao01
+server_fqdn: bao01.home.lab
+
+server_ipv4_address: 192.168.55.24
+server_ipv4_gateway: 192.168.55.1
+server_dns_servers:
+  - 192.168.55.10

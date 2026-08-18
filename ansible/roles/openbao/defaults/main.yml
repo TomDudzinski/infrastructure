@@ -1,0 +1,10 @@
+---
+openbao_version: "2.6.1"
+openbao_arch: "amd64"
+
+openbao_deb_filename: "openbao_{{ openbao_version }}_linux_{{ openbao_arch }}.deb"
+
+openbao_deb_url: >-
+  https://github.com/openbao/openbao/releases/download/v{{ openbao_version }}/{{ openbao_deb_filename }}
+
+openbao_deb_sha256: "07fcc56ab6dc422a6a8b69b1cb6c1d20ada81edb86cfce428e35e9eab4799c9f"

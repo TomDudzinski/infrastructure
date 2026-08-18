@@ -1,0 +1,17 @@
+ui = true
+
+api_addr = "https://{{ server_fqdn }}:8200"
+cluster_addr = "https://{{ server_ipv4_address }}:8201"
+
+storage "raft" {
+  path    = "/opt/openbao/data"
+  node_id = "{{ server_hostname }}"
+}
+
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_cert_file = "/etc/openbao/tls/bao01-fullchain.crt"
+  tls_key_file  = "/etc/openbao/tls/bao01.key"
+}
+
+

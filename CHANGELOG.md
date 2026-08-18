@@ -18,6 +18,19 @@
 - Added an independent Restic repository on the QNAP NFS storage.
 - Added the QNAP infrastructure configuration backup script.
 - Added documentation for `mysql01`.
+- Added Terraform-managed VM `104` (`bao01`) on `dtcode`.
+- Added the `secrets_servers` Ansible inventory group and `bao01` host configuration.
+- Added the `openbao` Ansible role and `bao01` bootstrap playbook.
+- Installed OpenBao `2.6.1` on `bao01`.
+- Configured OpenBao integrated Raft storage.
+- Enabled TLS for the OpenBao listener.
+- Added the HomeLab Root CA and OpenBao Intermediate CA hierarchy.
+- Enabled the OpenBao PKI secrets engine.
+- Added `userpass` authentication and the administrative `tom` account.
+- Added a dedicated HomeLab PKI certificate for `bao01.home.lab`.
+- Added a separate Nginx Proxy Manager frontend certificate for `bao01.home.lab`.
+- Added OpenBao service, PKI, recovery and VM documentation.
+- Added encrypted OpenBao Raft snapshot backup to QNAP.
 
 ### Changed
 
@@ -28,6 +41,10 @@
 - Added `ansible-core` to the host dependency installation script.
 - Updated the `dom` host documentation.
 - Updated the current project status.
+- Extended Terraform management to approved new resources on `dtcode`.
+- Added restricted `VM.Clone` access for Terraform to template `101`.
+- Added QNAP NFS systemd automount configuration on `iza`.
+- Updated infrastructure inventory and status for the deployed OpenBao platform.
 
 ### Security
 
@@ -38,12 +55,25 @@
 - Kept Terraform state, plans and token values outside Git.
 - Kept SSH password authentication disabled on `mysql01`.
 - Kept MySQL inaccessible from the LAN during initial deployment.
+- Initialized OpenBao with Shamir key splitting using 5 shares and a threshold of 3.
+- Revoked the initial OpenBao root token after administrative access was configured.
+- Kept OpenBao initialization material, unseal shares, private keys and tokens outside Git.
+- Added encrypted OpenBao initialization recovery material on `iza` and QNAP.
+- Added a dedicated GPG recovery key for OpenBao backup material.
+- Added an encrypted HomeLab Root CA private key backup on QNAP.
+- Verified TLS access to OpenBao without disabling certificate validation.
 
 ### Backup
 
 - Created and verified a QNAP-backed Restic repository.
 - Completed `restic check` successfully.
 - Completed an actual infrastructure configuration restore test successfully.
+- Created the first OpenBao integrated Raft snapshot.
+- Encrypted the Raft snapshot with the dedicated OpenBao recovery GPG key.
+- Verified encrypted snapshot decryption against the original SHA-256 checksum.
+- Copied the encrypted Raft snapshot to QNAP.
+- Verified identical SHA-256 checksums for the local and QNAP encrypted snapshot copies.
+- Documented that a complete OpenBao Raft restore test is still required.
 
 ## 2026-08-17
 
