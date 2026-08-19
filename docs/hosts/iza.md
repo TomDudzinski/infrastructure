@@ -215,6 +215,34 @@ Stopping all applications with `make down` causes temporary service downtime. Ch
 
 `config/backup.env` is intentionally excluded from Git because it contains repository-specific configuration and may reference credentials.
 
+### QNAP NFS automount
+
+The QNAP backup export is configured as a systemd automount through `/etc/fstab`.
+
+The configuration is managed by the Ansible `qnap_mount` role and uses:
+
+```text
+192.168.55.5:/Backup /mnt/qnap-backup nfs4 rw,vers=4.1,_netdev,nofail,x-systemd.automount,x-systemd.device-timeout=10s 0 0
+```
+
+The `x-systemd.automount` option creates the generated systemd automount unit:
+
+```text
+mnt-qnap\x2dbackup.automount
+```
+
+The NFS filesystem is mounted on first access to `/mnt/qnap-backup` rather than being required during the initial boot sequence.
+
+The `_netdev` option identifies the filesystem as network-dependent, while `nofail` prevents QNAP unavailability from blocking the host boot process.
+
+The configuration can be verified with:
+
+```bash
+findmnt /mnt/qnap-backup
+systemctl status 'mnt-qnap\x2dbackup.automount' --no-pager
+grep -nE '192\.168\.55\.5|/mnt/qnap-backup' /etc/fstab
+```
+
 ### Backup scope
 
 The current data backup script includes existing paths from:

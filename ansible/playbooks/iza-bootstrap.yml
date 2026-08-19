@@ -1,0 +1,7 @@
+---
+- name: Configure iza infrastructure host
+  hosts: iza
+  become: true
+
+  roles:
+    - qnap_mount

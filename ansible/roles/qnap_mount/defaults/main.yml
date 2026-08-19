@@ -1,0 +1,5 @@
+---
+qnap_mount_source: "192.168.55.5:/Backup"
+qnap_mount_path: "/mnt/qnap-backup"
+qnap_mount_fstype: "nfs4"
+qnap_mount_options: "rw,vers=4.1,_netdev,nofail,x-systemd.automount,x-systemd.device-timeout=10s"

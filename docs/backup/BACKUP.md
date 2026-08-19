@@ -32,6 +32,18 @@ It is mounted on `iza` at:
 
 The verified filesystem is NFS 4.1.
 
+The mount is configured persistently through `/etc/fstab` and managed by the Ansible `qnap_mount` role.
+
+The active configuration is:
+
+```text
+192.168.55.5:/Backup /mnt/qnap-backup nfs4 rw,vers=4.1,_netdev,nofail,x-systemd.automount,x-systemd.device-timeout=10s 0 0
+```
+
+Systemd creates `mnt-qnap\x2dbackup.automount` from this configuration. The NFS filesystem is mounted on demand when `/mnt/qnap-backup` is accessed.
+
+QNAP availability is therefore not required for `iza` to complete its boot process. Backup jobs still depend on the QNAP being reachable when they access the repository.
+
 The independent Restic repository is:
 
 ```text

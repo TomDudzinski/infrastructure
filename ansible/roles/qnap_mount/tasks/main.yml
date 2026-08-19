@@ -1,0 +1,22 @@
+---
+- name: Install NFS client
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+    update_cache: true
+  become: true
+
+- name: Ensure QNAP mount point exists
+  ansible.builtin.file:
+    path: "{{ qnap_mount_path }}"
+    state: directory
+  become: true
+
+- name: Configure QNAP NFS automount
+  ansible.posix.mount:
+    src: "{{ qnap_mount_source }}"
+    path: "{{ qnap_mount_path }}"
+    fstype: "{{ qnap_mount_fstype }}"
+    opts: "{{ qnap_mount_options }}"
+    state: present
+  become: true

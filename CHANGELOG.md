@@ -31,6 +31,9 @@
 - Added a separate Nginx Proxy Manager frontend certificate for `bao01.home.lab`.
 - Added OpenBao service, PKI, recovery and VM documentation.
 - Added encrypted OpenBao Raft snapshot backup to QNAP.
+- Added `iza` as a locally managed Ansible host.
+- Added the `qnap_mount` Ansible role and `iza` bootstrap playbook.
+- Added the pinned `ansible.posix` collection.
 
 ### Changed
 
@@ -44,6 +47,9 @@
 - Extended Terraform management to approved new resources on `dtcode`.
 - Added restricted `VM.Clone` access for Terraform to template `101`.
 - Added QNAP NFS systemd automount configuration on `iza`.
+- Moved the existing QNAP NFS automount configuration under Ansible management.
+- Configured Ansible on `iza` to use the classic `/usr/bin/sudo.ws` executable for local privilege escalation because the system-default `sudo-rs` was incompatible with the verified Ansible become workflow.
+- Documented the QNAP NFS automount implementation and recovery behavior.
 - Updated infrastructure inventory and status for the deployed OpenBao platform.
 
 ### Security
@@ -74,6 +80,8 @@
 - Copied the encrypted Raft snapshot to QNAP.
 - Verified identical SHA-256 checksums for the local and QNAP encrypted snapshot copies.
 - Documented that a complete OpenBao Raft restore test is still required.
+- Verified the QNAP NFS 4.1 systemd automount at `/mnt/qnap-backup`.
+- Verified that the Ansible-managed QNAP mount configuration is idempotent.
 
 ## 2026-08-17
 
