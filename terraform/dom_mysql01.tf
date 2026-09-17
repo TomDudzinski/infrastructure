@@ -10,6 +10,7 @@ resource "proxmox_download_file" "dom_ubuntu_2404_cloud_image" {
 
   checksum           = "6e40c07ae715f744f84af0bec76415cc1987dd115b4b8de437818561f01a3733"
   checksum_algorithm = "sha256"
+  overwrite          = false
 }
 
 resource "proxmox_virtual_environment_vm" "mysql01" {

@@ -1,0 +1,10 @@
+---
+- name: Bootstrap qdrant01
+  hosts: qdrant01
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: qemu_guest_agent
+    - role: docker_host
+    - role: qdrant

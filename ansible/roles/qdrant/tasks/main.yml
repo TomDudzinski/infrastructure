@@ -1,0 +1,23 @@
+---
+- name: Create Qdrant directory
+  ansible.builtin.file:
+    path: /opt/qdrant
+    state: directory
+    owner: tom
+    group: tom
+    mode: "0755"
+
+- name: Deploy Qdrant Compose file
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: /opt/qdrant/compose.yml
+    owner: tom
+    group: tom
+    mode: "0644"
+
+- name: Start Qdrant
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: /opt/qdrant
+  register: qdrant_compose
+  changed_when: "'Started' in qdrant_compose.stderr or 'Created' in qdrant_compose.stderr"
