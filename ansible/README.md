@@ -10,7 +10,13 @@ Ansible is executed from `iza`. The `iza` host is also managed locally by Ansibl
 
 ## Coverage of adopted dtcode guests — 2026-10-04
 
-Local review found no inventory entry, host_vars, playbook or assigned role for `dns01`, `home01`, `forgejo01`, `npm01` or `tailscale-router`. Current Ansible does not manage their operating systems or Technitium, Homepage, Forgejo, NPM and Tailscale services. Terraform state adoption does not establish Ansible management or runtime health. See [adoption review](../docs/operations/dtcode-adoption-2026-10-04.md).
+Following the [adoption review](../docs/operations/dtcode-adoption-2026-10-04.md), `dns01`, `home01`, `forgejo01`, `npm01` and `tailscale-router` are now listed in the `dtcode_existing` inventory group. This group provides a target for future diagnostics after access is verified; it does not assign service roles. No host_vars or playbooks were added for these guests, and existing playbooks target other hosts by name.
+
+Access to `dns01` at `192.168.55.10` was verified from the trusted execution host `iza`: SSH authentication works as `root` with `/home/tom/.ssh/homelab_automation_ed25519`, and Python 3 is available. Its inventory entry records the verified SSH user and key path. This remains inventory-only onboarding; no host or service configuration was applied.
+
+The other four guests retain IP-only entries. Their SSH user, authorized automation key and execution-host key path, SSH port/options and host-key verification, privilege escalation requirements/method and permissions, and Python availability/path still require verification. The `tom` user and key declared for other guests are not evidence of access to these four hosts. `ansible.cfg` uses `interpreter_python = auto_silent`, which is discovery policy rather than a verified interpreter path, including for `dns01`. Do not attempt diagnostics with implicit access defaults before the required details are confirmed.
+
+Only local/static checks were performed on the inventory change. Current Ansible does not manage these guests' operating systems or Technitium, Homepage, Forgejo, NPM and Tailscale services. Terraform state adoption and inventory entries do not establish Ansible management or runtime health. Historical absence findings in the adoption review describe the review before this inventory addition.
 
 ## Current status
 
