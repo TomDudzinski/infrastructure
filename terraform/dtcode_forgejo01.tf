@@ -81,6 +81,10 @@ resource "proxmox_virtual_environment_vm" "forgejo01" {
     mac_address = "BC:24:11:EE:DF:8B"
   }
 
+  serial_device {
+    device = "socket"
+  }
+
   vga {
     type   = "std"
     memory = 16

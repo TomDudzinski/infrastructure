@@ -81,6 +81,10 @@ resource "proxmox_virtual_environment_vm" "npm01" {
     mac_address = "BC:24:11:DE:63:4A"
   }
 
+  serial_device {
+    device = "socket"
+  }
+
   vga {
     type   = "std"
     memory = 16

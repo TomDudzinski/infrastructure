@@ -81,6 +81,10 @@ resource "proxmox_virtual_environment_vm" "home01" {
     mac_address = "BC:24:11:E4:03:16"
   }
 
+  serial_device {
+    device = "socket"
+  }
+
   vga {
     type   = "std"
     memory = 16

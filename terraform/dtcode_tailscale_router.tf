@@ -81,6 +81,10 @@ resource "proxmox_virtual_environment_vm" "tailscale_router" {
     mac_address = "BC:24:11:7E:01:6F"
   }
 
+  serial_device {
+    device = "socket"
+  }
+
   vga {
     type   = "std"
     memory = 16
