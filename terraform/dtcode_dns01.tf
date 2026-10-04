@@ -16,7 +16,7 @@ resource "proxmox_virtual_environment_container" "dns01" {
   started       = true
   start_on_boot = true
   # Current protection=0; enabling protection requires a separate policy change.
-  protection    = false
+  protection = false
 
   startup {
     order    = 1

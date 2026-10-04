@@ -13,8 +13,8 @@ resource "proxmox_virtual_environment_vm" "home01" {
   vm_id     = 103
 
   # No pool_id: historical state has no resource pool assignment.
-  started         = true
-  on_boot         = true
+  started = true
+  on_boot = true
   # Current protection=0; enabling protection requires a separate policy change.
   protection      = false
   stop_on_destroy = true
