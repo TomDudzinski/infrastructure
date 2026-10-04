@@ -57,6 +57,16 @@ Forgejo is the source of truth. The GitHub mirror may temporarily be behind the 
 | 106 | `npm01` | `192.168.55.23` | Nginx Proxy Manager |
 | 107 | `tailscale-router` | `192.168.55.4` | Tailscale subnet router |
 
+## Completed dtcode adoption — 2026-10-04
+
+According to the administrator's completion report dated `2026-10-04`, `dns01` (LXC 102, `192.168.55.10`), `home01` (VM 103, `192.168.55.20`), `forgejo01` (VM 105, `192.168.55.22`), `npm01` (VM 106, `192.168.55.23`) and `tailscale-router` (VM 107, `192.168.55.4`) were imported individually into the current Terraform state. Each import was checked with a targeted plan; the final state list included all five resources. The final full plan reported **0 add, 5 change, 0 destroy**. **No terraform apply was performed.**
+
+Remaining reported differences concern VM destroy-behavior defaults, VGA for all four VMs, memory for `tailscale-router`, and timeout/vm_id for `dns01`. Four VM definitions contain `serial_device { device = "socket" }`, consistent with the previously verified live hardware. A Terraform state backup was made after adoption; its location and restore were not checked here. This is not an application-data backup.
+
+This laptop review confirms local definitions only. State membership, plan results, prior live hardware verification and backup completion are administrator-reported evidence, not operations performed or independently repeated here. None of the five hosts has current Ansible inventory, host_vars, playbooks or assigned roles. Adoption does not establish service deployment, runtime health or application restore capability.
+
+See [detailed review](docs/operations/dtcode-adoption-2026-10-04.md).
+
 ## AI platform
 
 The `iza` physical server currently runs:

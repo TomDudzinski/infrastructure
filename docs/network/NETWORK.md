@@ -41,7 +41,7 @@ Reconciled on `2026-10-04` using local documentation and source code only. Exist
 
 ## Recovered legacy network configuration
 
-All five legacy guests use historical static addresses in `192.168.55.0/24`, gateway `192.168.55.1` and bridge `vmbr0`. They are documented only in the current management scope; historical Terraform tags do not mean current Terraform or Ansible ownership.
+All five legacy guests use historical static addresses in `192.168.55.0/24`, gateway `192.168.55.1` and bridge `vmbr0`. Current Terraform definitions preserve these addresses, and state adoption was completed on 2026-10-04 according to the administrator. None has current Ansible management. The following service ports/routes remain historical evidence, not new runtime verification.
 
 | Resource | Historical service exposure / routing | Evidence |
 |---|---|---|

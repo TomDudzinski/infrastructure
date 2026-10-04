@@ -46,7 +46,7 @@ The physical host is documented only: the current Terraform uses it as a provide
 
 Current Terraform includes restricted management of `bao01` (ID `104`), cloned from template `101`. Current Ansible has its inventory entry and OpenBao bootstrap. The host is no longer accurately described as a read-only Terraform environment.
 
-The five existing legacy guests (`dns01`, `home01`, `forgejo01`, `npm01`, `tailscale-router`) have no current Terraform definitions or Ansible inventory entries. Historical code has now been recovered from `/home/tom/Projekty/infrastructure-old/homelab/terraform/environments/dev/`; it is evidence only, not an active management mechanism. State membership and live configuration were not checked.
+The five existing guests (`dns01`, `home01`, `forgejo01`, `npm01`, `tailscale-router`) have current Terraform definitions and completed state adoption reported by the administrator on `2026-10-04`. They have no Ansible inventory entries or playbooks. Live hardware was previously verified by the administrator; no live checks were repeated here. See the [adoption review](../operations/dtcode-adoption-2026-10-04.md).
 
 Historically, `dns01` was an unprivileged Ubuntu 22.04 LXC on `local-lvm`. The four legacy VMs were full clones of template `999` using cloud-init and `vmbr0`. Their old Terraform also performed imperative service installation over SSH (`remote-exec`/`local-exec`), rather than Ansible roles. This does not establish the present template contents, VM disk sizes or actual service versions.
 
@@ -64,7 +64,7 @@ Historically, `dns01` was an unprivileged Ubuntu 22.04 LXC on `local-lvm`. The f
 
 `test-vm` remains **historical**; its current presence cannot be confirmed. No active definitions or recreation plans are added for either historical guest.
 
-Planned management adoption requires explicit approval after verifying guest configuration, dependencies, persistent data and backup/restore coverage. Preserve all existing IDs, addresses and data; do not recreate guests from historical source.
+State adoption is complete. Applying remaining Terraform differences or adding Ansible management requires a separate review of guest configuration, dependencies, persistent data and backup/restore coverage. Preserve all existing IDs, addresses and data; do not recreate guests from historical source.
 
 See:
 

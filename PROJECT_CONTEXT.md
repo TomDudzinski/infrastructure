@@ -83,13 +83,13 @@ Services currently include:
 
 ## Known Virtual Machines
 
-- dns01 - VM ID 102 - 192.168.55.10
+- dns01 - LXC ID 102 - 192.168.55.10
 - home01 - VM ID 103 - 192.168.55.20
 - forgejo01 - VM ID 105 - 192.168.55.22
 - npm01 - VM ID 106 - 192.168.55.23
 - tailscale-router - VM ID 107 - 192.168.55.4
 
-These machines already exist and must be preserved.
+These machines already exist and must be preserved. Current Terraform definitions exist and state adoption was completed on `2026-10-04` according to the administrator. No apply followed; none has current Ansible management. See [adoption review](docs/operations/dtcode-adoption-2026-10-04.md).
 
 ## Secrets
 

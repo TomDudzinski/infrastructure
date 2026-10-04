@@ -301,7 +301,7 @@ Terraform state can contain sensitive values even when input variables are marke
 
 The local backend does not provide remote locking. Terraform operations must be executed from `iza`, one at a time.
 
-The current state tracks newly created resources on `dom`. Existing `dtcode` resources remain outside the state.
+The five existing `dtcode` guests were individually adopted on `2026-10-04`, according to the administrator. Full plan: 0 add, 5 change, 0 destroy; no apply; state backup completed. The state backup is not a VM/container or application-data backup. This laptop review did not connect to Proxmox. See [adoption review](../operations/dtcode-adoption-2026-10-04.md).
 
 ## State backup
 
@@ -378,7 +378,7 @@ proxmox_virtual_environment_vm.mysql01
 
 The VM is assigned to the `terraform-managed` resource pool.
 
-Existing resources on `dtcode` have not been imported.
+The five existing `dtcode` guests were individually adopted on `2026-10-04`, according to the administrator. Full plan: 0 add, 5 change, 0 destroy; no apply; state backup completed. The state backup is not a VM/container or application-data backup. This laptop review did not connect to Proxmox. See [adoption review](../operations/dtcode-adoption-2026-10-04.md).
 
 ## Existing-resource import policy
 

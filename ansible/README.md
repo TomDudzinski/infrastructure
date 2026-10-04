@@ -8,6 +8,10 @@ Terraform manages the Proxmox resource lifecycle. Ansible configures operating s
 
 Ansible is executed from `iza`. The `iza` host is also managed locally by Ansible for selected host-level configuration.
 
+## Coverage of adopted dtcode guests — 2026-10-04
+
+Local review found no inventory entry, host_vars, playbook or assigned role for `dns01`, `home01`, `forgejo01`, `npm01` or `tailscale-router`. Current Ansible does not manage their operating systems or Technitium, Homepage, Forgejo, NPM and Tailscale services. Terraform state adoption does not establish Ansible management or runtime health. See [adoption review](../docs/operations/dtcode-adoption-2026-10-04.md).
+
 ## Current status
 
 Ansible is installed on `iza` and currently manages:

@@ -31,19 +31,24 @@ The current management environment includes:
 
 ## Terraform status
 
-Terraform currently manages approved newly created resources on both `dom` and `dtcode`.
+Terraform manages approved newly created resources and the five adopted existing `dtcode` guests.
 
 | Resource | Status |
 |---|---|
 | `mysql01` VM, ID `201` | Managed |
 | `bao01` VM, ID `104` | Managed |
+| `dns01` LXC, ID `102` | Adopted 2026-10-04; administrator report |
+| `home01` VM, ID `103` | Adopted 2026-10-04; administrator report |
+| `forgejo01` VM, ID `105` | Adopted 2026-10-04; administrator report |
+| `npm01` VM, ID `106` | Adopted 2026-10-04; administrator report |
+| `tailscale-router` VM, ID `107` | Adopted 2026-10-04; administrator report |
 | State path | `terraform/state/terraform.tfstate` |
 | State permissions | Protected locally |
 | State backup to QNAP | Active |
 
 The Terraform configuration uses restricted Proxmox management credentials rather than unrestricted administrative credentials.
 
-Existing legacy workloads on `dtcode` have not been imported into the current Terraform state.
+The five existing guests `dns01`, `home01`, `forgejo01`, `npm01` and `tailscale-router` were adopted into the current Terraform state on `2026-10-04`, according to the administrator; no apply followed.
 
 The newly created `bao01` VM is managed by the current Terraform state.
 
@@ -272,7 +277,7 @@ OpenBao backup creation is not yet automated.
 
 The current repository remains the primary infrastructure repository. `/home/tom/Projekty/infrastructure-old/homelab` is an archival knowledge source only. Historical Terraform definitions were read locally; no old code, state, secret values or keys were imported.
 
-The five legacy services now have documentation covering IDs, addresses, purpose, historical allocation, persistent data and earlier provisioning: [dns01](docs/vms/dns01.md), [home01](docs/vms/home01.md), [forgejo01](docs/vms/forgejo01.md), [npm01](docs/vms/npm01.md), [tailscale-router](docs/vms/tailscale-router.md). They remain documented legacy resources with no current Terraform or Ansible definitions. Future adoption is planned only after verification and explicit approval.
+The five legacy services now have documentation covering IDs, addresses, purpose, historical allocation, persistent data and earlier provisioning: [dns01](docs/vms/dns01.md), [home01](docs/vms/home01.md), [forgejo01](docs/vms/forgejo01.md), [npm01](docs/vms/npm01.md), [tailscale-router](docs/vms/tailscale-router.md). They now have current Terraform definitions and completed state adoption reported on 2026-10-04. They have no current Ansible definitions; service/data/backup verification remains separate.
 
 `dtcode` is an existing physical host, documented rather than lifecycle-managed by current Terraform/Ansible. `bao01` and `mysql01` have both current Terraform and Ansible definitions and previously documented deployment. Current code also defines `qdrant01`, `langfuse01`, `grafana01` and `cloudflare01` with Ansible inventory/playbooks. Their deployment and current state membership are unconfirmed in this review; code presence alone does not establish operation. The earlier Terraform/Ansible sections describe the previously documented operational subset, not the full current code inventory. See [management classification](INVENTORY.md#management-classification-and-historical-evidence).
 
@@ -282,23 +287,11 @@ The five legacy services now have documentation covering IDs, addresses, purpose
 
 `test-vm` remains **historical**; its current presence cannot be confirmed. No active definitions or recreation plans are added for either historical guest.
 
-Unconfirmed: actual legacy configuration drift, current images and disk sizes, DNS/proxy routes, certificate provenance, Tailscale approvals/ACLs, data locations and contents, backup coverage and restore capability. Historical definitions do not confirm execution, simultaneous operation or decommissioning dates. Laptop work is limited to local code/documentation review; infrastructure checks require a separately authorized operational environment.
+Unconfirmed: guest/application configuration drift, current service images, DNS/proxy routes, certificate provenance, Tailscale approvals/ACLs, data locations and contents, backup coverage and restore capability. Historical definitions do not confirm execution, simultaneous operation or decommissioning dates. Laptop work is limited to local code/documentation review; infrastructure checks require a separately authorized operational environment.
 
 ## Existing dtcode resources
 
-Existing legacy resources on `dtcode` remain outside the current Terraform state unless explicitly documented otherwise.
-
-`bao01` is an exception because it was deliberately created as a new Terraform-managed resource.
-
-Legacy resources must not be imported until their:
-
-- configuration;
-- dependencies;
-- persistent data;
-- backup coverage;
-- lifecycle requirements
-
-have been documented and verified.
+The five guests listed above have completed state adoption. Templates 101 and 999 are still documented as outside current state; this review did not confirm their membership. Any additional import requires a separate review and approval.
 
 ## Current task
 
@@ -321,22 +314,15 @@ OpenBao is now operational, but several operational areas still require automati
 11. Configure MySQL logical backups.
 12. Test MySQL restore.
 13. Implement backup monitoring and alerting.
-14. Review existing `dtcode` resources before any Terraform import.
+14. Review the five adopted `dtcode` guests' remaining provider/state differences and plan application backup/restore and Ansible coverage.
 15. Continue migration of infrastructure management into Terraform and Ansible without unnecessarily rebuilding existing services.
 
-## Legacy definition update (2026-10-04)
+## Completed dtcode state adoption (2026-10-04)
 
-Five local Terraform definitions for `home01` (103), `forgejo01` (105), `npm01`
-(106), `tailscale-router` (107) and `dns01` (102) have been aligned with live
-hardware configuration supplied by the administrator. Four VM system disks
-are now explicitly declared as 32 GiB on `local-lvm` / `scsi0`; disk and VM OS
-lifecycle exclusions and historical VM clone blocks were removed. MAC addresses
-are preserved. `protection = false` reflects current protection=0; enabling it
-remains a future policy change. Terraform `prevent_destroy` remains enabled.
+According to the administrator's completion report dated `2026-10-04`, `dns01` (LXC 102, `192.168.55.10`), `home01` (VM 103, `192.168.55.20`), `forgejo01` (VM 105, `192.168.55.22`), `npm01` (VM 106, `192.168.55.23`) and `tailscale-router` (VM 107, `192.168.55.4`) were imported individually into the current Terraform state. Each import was checked with a targeted plan; the final state list included all five resources. The final full plan reported **0 add, 5 change, 0 destroy**. **No terraform apply was performed.**
 
-These definitions do not establish Terraform state membership or deployment.
-No Terraform commands or infrastructure connections were performed on this
-laptop. This update supersedes the earlier statement that these five guests
-have no current Terraform definitions, and the disk-size uncertainty for the
-supplied hardware data; service/data/backup verification remains outstanding.
-See [adoption procedure and remaining uncertainties](terraform/README.md#prepared-legacy-adoption-on-dtcode-2026-10-04).
+Remaining reported differences concern VM destroy-behavior defaults, VGA for all four VMs, memory for `tailscale-router`, and timeout/vm_id for `dns01`. Four VM definitions contain `serial_device { device = "socket" }`, consistent with the previously verified live hardware. A Terraform state backup was made after adoption; its location and restore were not checked here. This is not an application-data backup.
+
+This laptop review confirms local definitions only. State membership, plan results, prior live hardware verification and backup completion are administrator-reported evidence, not operations performed or independently repeated here. None of the five hosts has current Ansible inventory, host_vars, playbooks or assigned roles. Adoption does not establish service deployment, runtime health or application restore capability.
+
+See [detailed review](docs/operations/dtcode-adoption-2026-10-04.md).

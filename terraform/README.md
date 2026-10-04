@@ -28,9 +28,9 @@ The first resource managed by the current Terraform state is `mysql01` on `dom`.
 | Provider | `bpg/proxmox` `0.111.1` |
 | Backend | Local |
 | State path | `terraform/state/terraform.tfstate` |
-| Managed Proxmox host | `dom` |
-| Managed VM | `mysql01`, VM ID `201` |
-| Existing `dtcode` resources | Not imported |
+| Managed Proxmox hosts | `dom`, `dtcode` |
+| Managed VM | `mysql01`, VM ID `201`; see adopted guests below |
+| Existing `dtcode` resources | Five guests adopted 2026-10-04 (administrator report); templates not adopted by this work |
 
 ## Proxmox providers
 
@@ -69,6 +69,11 @@ terraform/
 ├── backend.tf
 ├── data.tf
 ├── dom_mysql01.tf
+├── dtcode_dns01.tf
+├── dtcode_home01.tf
+├── dtcode_forgejo01.tf
+├── dtcode_npm01.tf
+├── dtcode_tailscale_router.tf
 ├── outputs.tf
 ├── providers.tf
 ├── README.md
@@ -112,13 +117,18 @@ Display tracked resources:
 terraform -chdir=terraform state list
 ```
 
-The current state should include:
+Previously documented resources and the administrator-reported adoption addresses (not a complete independently verified state listing):
 
 ```text
 data.proxmox_version.dom
 data.proxmox_version.dtcode
 proxmox_download_file.dom_ubuntu_2404_cloud_image
 proxmox_virtual_environment_vm.mysql01
+proxmox_virtual_environment_container.dns01
+proxmox_virtual_environment_vm.home01
+proxmox_virtual_environment_vm.forgejo01
+proxmox_virtual_environment_vm.npm01
+proxmox_virtual_environment_vm.tailscale_router
 ```
 
 ## State backup
@@ -275,11 +285,11 @@ Guest packages and MySQL configuration are managed by Ansible.
 
 ## Existing infrastructure
 
-Existing VMs, containers and templates on `dtcode` are not tracked by the current state.
+The five existing `dtcode` guests have completed state adoption; `bao01` was already documented as managed. Templates 101/999 are not covered by this adoption. State membership was not independently checked on this laptop.
 
 They must not be recreated or imported merely to make the inventory appear complete.
 
-Required import workflow:
+For any additional existing resource, the separately approved operator import workflow is:
 
 1. Document the resource and its dependencies.
 2. Verify persistent data and backup coverage.
@@ -338,13 +348,13 @@ A normal post-apply plan should report no infrastructure changes.
 | Configuration and state backup | Restic |
 | Secret management target | OpenBao |
 
-## Prepared legacy adoption on dtcode (2026-10-04)
+## Completed state adoption on dtcode (2026-10-04)
 
-The definitions in `dtcode_home01.tf`, `dtcode_forgejo01.tf`, `dtcode_npm01.tf`,
-`dtcode_tailscale_router.tf` and `dtcode_dns01.tf` now reflect live hardware
-configuration supplied by the administrator. This laptop review did not contact
-Proxmox, execute Terraform or confirm state membership. The resources remain
-prepared for adoption, not imported by this change.
+According to the administrator's completion report dated `2026-10-04`, `dns01` (LXC 102, `192.168.55.10`), `home01` (VM 103, `192.168.55.20`), `forgejo01` (VM 105, `192.168.55.22`), `npm01` (VM 106, `192.168.55.23`) and `tailscale-router` (VM 107, `192.168.55.4`) were imported individually into the current Terraform state. Each import was checked with a targeted plan; the final state list included all five resources. The final full plan reported **0 add, 5 change, 0 destroy**. **No terraform apply was performed.**
+
+Remaining reported differences concern VM destroy-behavior defaults, VGA for all four VMs, memory for `tailscale-router`, and timeout/vm_id for `dns01`. Four VM definitions contain `serial_device { device = "socket" }`, consistent with the previously verified live hardware. A Terraform state backup was made after adoption; its location and restore were not checked here. This is not an application-data backup.
+
+This laptop review confirms local definitions only. State membership, plan results, prior live hardware verification and backup completion are administrator-reported evidence, not operations performed or independently repeated here. None of the five hosts has current Ansible inventory, host_vars, playbooks or assigned roles. Adoption does not establish service deployment, runtime health or application restore capability.
 
 | Resource address suffix | ID | CPU cores | RAM MiB | Storage | IPv4 | Startup order |
 |---|---|---|---|---|---|---|
@@ -390,37 +400,10 @@ optional disk defaults (cache, discard, iothread, aio, backup, replication,
 format and SSD emulation); optional NIC settings (MTU, VLAN, queues, rate and
 LXC firewall); optional startup/down delay and agent settings; cloud-init DNS,
 username and upgrade behavior; exact LXC template image and availability;
-other LXC feature defaults; provider normalization after import; actual state
-membership, dependencies, persistent data and backup/restore coverage.
+other LXC feature defaults; provider normalization after import; dependencies,
+persistent data and backup/restore coverage.
 Historical/default values in the definitions are not newly confirmed live facts.
 
-### Before the first import on iza
+State membership, the plan summary and the post-adoption state backup are administrator-reported; their contents, backup location, integrity and restore were not independently verified locally. Import completion does not confirm that every step of the former pre-import procedure was performed, including full guest/application backup and restore checks. Missing backup artifacts in this checkout do not establish whether backups exist elsewhere.
 
-This is a future operator procedure, not authorization to execute it here.
-
-1. Obtain explicit approval for the selected resource's import. Synchronize and
-   review these exact changes on `iza` using the approved transfer/Git workflow.
-2. Ensure no concurrent Terraform process is using the local backend. Confirm
-   the backend path `terraform/state/terraform.tfstate`, Terraform 1.15.x and
-   the lock file pin to bpg/proxmox 0.111.1; do not upgrade providers.
-3. Verify persistent data, resource backups and recovery coverage. Create a
-   restricted backup of the current state and configuration before mutation;
-   do not commit or display state, credentials or saved plans.
-4. On `iza`, initialize the existing backend if required, then run formatting
-   and schema validation. Inspect the pinned provider documentation/schema for
-   import identifiers, disk defaults and LXC template requirements. Resolve
-   validation failures without inventing volume names or fetching template 999.
-5. Load approved audit and management credentials from the existing external
-   credential files with shell tracing disabled. Confirm restricted ACLs cover
-   the selected existing resource without moving it into a resource pool.
-6. Inspect current state membership and confirm the selected node/ID is not
-   already managed under another address/state. Confirm the supplied live
-   configuration is still current and resolve the unverified parameters above.
-7. Import one approved resource at a time using its exact resource address and
-   the node/ID identifier confirmed for 0.111.1 (expected `dtcode/103`,
-   `dtcode/105`, `dtcode/106`, `dtcode/107`, or `dtcode/102`). Import writes state;
-   it does not authorize apply or recreation.
-8. After each import, inspect a complete saved plan, including unrelated
-   configured resources. Stop for any unexpected change, replacement, disk
-   operation, cloud-init reset or protection drift. Reconcile definitions and
-   review before considering the next import. Apply requires separate approval.
+The five imports are complete and should not be repeated. Remaining differences require review of the full plan before any separately approved apply. Header comments in the five `.tf` files still say "not imported"; they are stale and remain unchanged in this documentation-only update.

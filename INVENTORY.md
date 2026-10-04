@@ -14,6 +14,16 @@ Detailed configuration, dependencies, persistent data, backup, and recovery info
 
 Last documented operational inventory: `2026-08-18`. Historical-source reconciliation: `2026-10-04` (local files only; no live verification).
 
+## Adoption update — 2026-10-04
+
+According to the administrator's completion report dated `2026-10-04`, `dns01` (LXC 102, `192.168.55.10`), `home01` (VM 103, `192.168.55.20`), `forgejo01` (VM 105, `192.168.55.22`), `npm01` (VM 106, `192.168.55.23`) and `tailscale-router` (VM 107, `192.168.55.4`) were imported individually into the current Terraform state. Each import was checked with a targeted plan; the final state list included all five resources. The final full plan reported **0 add, 5 change, 0 destroy**. **No terraform apply was performed.**
+
+Remaining reported differences concern VM destroy-behavior defaults, VGA for all four VMs, memory for `tailscale-router`, and timeout/vm_id for `dns01`. Four VM definitions contain `serial_device { device = "socket" }`, consistent with the previously verified live hardware. A Terraform state backup was made after adoption; its location and restore were not checked here. This is not an application-data backup.
+
+This laptop review confirms local definitions only. State membership, plan results, prior live hardware verification and backup completion are administrator-reported evidence, not operations performed or independently repeated here. None of the five hosts has current Ansible inventory, host_vars, playbooks or assigned roles. Adoption does not establish service deployment, runtime health or application restore capability.
+
+See [detailed review](docs/operations/dtcode-adoption-2026-10-04.md).
+
 ## Network
 
 | Item | Value | Status |
@@ -49,7 +59,7 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Storage | `local`, `local-lvm` |
 | Network bridge | `vmbr0` |
 | Known workloads | VM IDs `101`, `103`-`107`, `999`; LXC ID `102` |
-| Current management | Proxmox VE; Terraform and Ansible manage approved new resources including `bao01`; existing workloads remain outside the current Terraform state |
+| Current management | Current Terraform state manages `bao01` and the five guests adopted on 2026-10-04; Ansible does not manage those five guests |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dtcode.md` |
 | Verification status | Live inventory verified on `2026-08-17` |
@@ -141,15 +151,15 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 
 The following machines already exist and must be preserved. Their live Proxmox configuration, dependencies, persistent data, and backup status require separate verification before significant changes.
 
-| ID | Type | Name | Address | Proxmox host | State | Management status | Documentation |
+| ID | Type | Name | Address | Proxmox host | State (historical observation, not rechecked) | Management status | Documentation |
 |---:|---|---|---|---|---|---|---|
 | 101 | VM template | `ubuntu-2404` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
-| 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/dns01.md` |
-| 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/home01.md` |
+| 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Terraform definition present; state adoption reported 2026-10-04; no current Ansible definition | `docs/vms/dns01.md` |
+| 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Terraform definition present; state adoption reported 2026-10-04; no current Ansible definition | `docs/vms/home01.md` |
 | 104 | VM | `bao01` | `192.168.55.24` | `dtcode` | Running | Managed by current Terraform state and Ansible | `docs/vms/bao01.md` |
-| 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/forgejo01.md` |
-| 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/npm01.md` |
-| 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/tailscale-router.md` |
+| 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Terraform definition present; state adoption reported 2026-10-04; no current Ansible definition | `docs/vms/forgejo01.md` |
+| 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Terraform definition present; state adoption reported 2026-10-04; no current Ansible definition | `docs/vms/npm01.md` |
+| 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Terraform definition present; state adoption reported 2026-10-04; no current Ansible definition | `docs/vms/tailscale-router.md` |
 | 201 | VM | mysql01 | 192.168.55.21 | dom | Running | Managed by current Terraform state and Ansible | docs/vms/mysql01.md |
 | 999 | VM template | `ubuntu-temp` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
 
@@ -160,11 +170,11 @@ Classification describes both resource lifecycle and management coverage; these 
 | Resource | Lifecycle / evidence | Current Terraform | Current Ansible | Documentation / planned work |
 |---|---|---|---|---|
 | `dtcode` | Existing physical host; prior inventory | No host lifecycle definition; provider target only | No current host inventory entry | Documented only; preserve host and legacy guests |
-| `dns01` | Existing legacy LXC, ID `102` | No | No | Documented only; verify before any adoption |
-| `home01` | Existing legacy VM, ID `103` | No | No | Documented only; verify before any adoption |
-| `forgejo01` | Existing legacy VM, ID `105` | No | No | Documented only; verify before any adoption |
-| `npm01` | Existing legacy VM, ID `106` | No | No | Documented only; verify before any adoption |
-| `tailscale-router` | Existing legacy VM, ID `107` | No | No | Documented only; verify before any adoption |
+| `dns01` | Existing legacy LXC, ID `102` | Definition present; state adoption reported 2026-10-04 | No | Service/data/restore verification outstanding |
+| `home01` | Existing legacy VM, ID `103` | Definition present; state adoption reported 2026-10-04 | No | Service/data/restore verification outstanding |
+| `forgejo01` | Existing legacy VM, ID `105` | Definition present; state adoption reported 2026-10-04 | No | Service/data/restore verification outstanding |
+| `npm01` | Existing legacy VM, ID `106` | Definition present; state adoption reported 2026-10-04 | No | Service/data/restore verification outstanding |
+| `tailscale-router` | Existing legacy VM, ID `107` | Definition present; state adoption reported 2026-10-04 | No | Service/data/restore verification outstanding |
 | `bao01` | Deployment recorded in prior documentation, ID `104` | Definition present; management previously documented | Inventory and bootstrap present | Current managed scope; no new runtime verification |
 | `mysql01` | Deployment recorded in prior documentation, ID `201` | Definition present; management previously documented | Inventory and bootstrap present | Current managed scope; no new runtime verification |
 | `qdrant01` | VM ID `202`, `192.168.55.25`, `dom`; code evidence only in this review | Definition present | Inventory and bootstrap present | Deployment/state membership unconfirmed; no runtime status asserted |
@@ -223,5 +233,5 @@ The following information still requires live verification:
 - database-aware backup and restore procedure for `mysql01`
 - monitoring and alerting for `mysql01` and MySQL
 - DNS verification for `mysql01.home.lab`
-- controlled comparison and import plan for existing `dtcode` resources
+- review remaining provider/state differences for the five adopted `dtcode` guests; separately assess any other import
 - complete inventory of existing secrets that still require controlled migration into OpenBao
