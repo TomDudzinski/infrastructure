@@ -1,0 +1,9 @@
+---
+- name: Bootstrap grafana01
+  hosts: grafana01
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: qemu_guest_agent
+    - role: grafana

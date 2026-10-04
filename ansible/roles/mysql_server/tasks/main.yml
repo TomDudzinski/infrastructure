@@ -11,10 +11,24 @@
 - name: Configure MySQL server
   ansible.builtin.template:
     src: homelab.cnf.j2
-    dest: /etc/mysql/mysql.conf.d/99-homelab.cnf
+    dest: /etc/mysql/mysql.conf.d/zz-homelab.cnf
     owner: root
     group: root
     mode: "0644"
+  notify: Restart MySQL
+
+- name: Remove legacy MySQL configuration file
+  ansible.builtin.file:
+    path: /etc/mysql/mysql.conf.d/99-homelab.cnf
+    state: absent
+  notify: Restart MySQL
+
+- name: Configure MySQL bind address
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^\s*bind-address\s*='
+    line: "bind-address = {{ mysql_bind_address | default('127.0.0.1') }}"
+    backup: true
   notify: Restart MySQL
 
 - name: Ensure MySQL is enabled and running

@@ -1,0 +1,17 @@
+[server]
+protocol = http
+http_addr = {{ grafana_http_addr }}
+http_port = {{ grafana_http_port }}
+domain = {{ grafana_domain }}
+root_url = {{ grafana_root_url }}
+serve_from_sub_path = false
+
+[security]
+cookie_secure = true
+cookie_samesite = lax
+
+[users]
+allow_sign_up = false
+
+[auth.anonymous]
+enabled = false

@@ -7,6 +7,8 @@ server_ipv4_gateway: 192.168.55.1
 server_dns_servers:
   - 192.168.55.10
 
+mysql_bind_address: "192.168.55.21"
+
 mysql_databases:
   - name: ai_demo
     encoding: utf8mb4

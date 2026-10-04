@@ -41,3 +41,7 @@ provider "proxmox" {
   # Replace this with trusted local PKI certificates in a later stage.
   insecure = true
 }
+
+#provider "cloudflare" {
+# api_token = var.cloudflare_api_token
+#}

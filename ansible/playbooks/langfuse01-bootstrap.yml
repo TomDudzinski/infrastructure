@@ -1,0 +1,10 @@
+---
+- name: Bootstrap langfuse01
+  hosts: langfuse01
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: qemu_guest_agent
+    - role: docker_host
+    - role: langfuse

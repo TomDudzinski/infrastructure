@@ -1,0 +1,16 @@
+---
+- name: Use HTTPS for Ubuntu archive repository
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list.d/ubuntu.sources
+    regexp: 'http://archive\.ubuntu\.com'
+    replace: 'https://archive.ubuntu.com'
+
+- name: Use HTTPS for Ubuntu security repository
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list.d/ubuntu.sources
+    regexp: 'http://security\.ubuntu\.com'
+    replace: 'https://security.ubuntu.com'
+
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: true

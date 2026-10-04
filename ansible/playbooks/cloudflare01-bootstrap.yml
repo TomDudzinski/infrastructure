@@ -1,0 +1,10 @@
+---
+- name: Bootstrap cloudflare01
+  hosts: cloudflare01
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: ubuntu_https_repositories
+    - role: qemu_guest_agent
+    - role: cloudflared

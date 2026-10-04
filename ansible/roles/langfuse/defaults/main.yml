@@ -1,0 +1,9 @@
+---
+langfuse_install_dir: /opt/langfuse
+langfuse_version: "4"
+
+langfuse_web_port: 3000
+langfuse_minio_port: 9090
+
+langfuse_nextauth_url: "http://192.168.55.26:3000"
+langfuse_telemetry_enabled: false
