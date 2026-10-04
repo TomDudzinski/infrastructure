@@ -4,6 +4,10 @@
 
 This document records the HomeLab network addressing, service dependencies and access boundaries.
 
+## Evidence boundary
+
+Reconciled on `2026-10-04` using local documentation and source code only. Existing “Verified” labels refer to prior recorded observations, not checks performed in this review. Historical port mappings and routes describe intended old configuration; current listeners, DNS records, ACLs and firewall policy remain unconfirmed. Operational command examples below must not be executed from the development laptop.
+
 ## Primary network
 
 | Property | Value |
@@ -28,7 +32,34 @@ This document records the HomeLab network addressing, service dependencies and a
 | `192.168.55.20` | `home01` | VM | HomeLab portal | Verified |
 | `192.168.55.21` | `mysql01` | VM | MySQL database server | Verified |
 | `192.168.55.22` | `forgejo01` | VM | Git service | Verified |
-| `192.168.55.23` | `npm01` | VM | Reverse proxy | Verified |
+| `192.168.55.23` | `npm01` | VM | Reverse proxy | Previously documented; legacy |
+| `192.168.55.24` | `bao01` | VM | OpenBao | Current Terraform/Ansible; prior deployment documented |
+| `192.168.55.25` | `qdrant01` | VM | Vector database | Current code; deployment unconfirmed |
+| `192.168.55.26` | `langfuse01` | VM | LLM observability | Current code; deployment unconfirmed |
+| `192.168.55.27` | `grafana01` | VM | Observability | Current code; deployment unconfirmed |
+| `192.168.55.28` | `cloudflare01` | VM | Tunnel gateway | Current code; deployment unconfirmed |
+
+## Recovered legacy network configuration
+
+All five legacy guests use historical static addresses in `192.168.55.0/24`, gateway `192.168.55.1` and bridge `vmbr0`. They are documented only in the current management scope; historical Terraform tags do not mean current Terraform or Ansible ownership.
+
+| Resource | Historical service exposure / routing | Evidence |
+|---|---|---|
+| `dns01`, ID `102`, `.10` | Technitium with Docker host networking; administration link on `5380` | `technitium-dns.tf`, `homepage.tf` |
+| `home01`, ID `103`, `.20` | Homepage TCP `3000`; allowed names included `home.lab` and `home.home.lab` | `homepage.tf`; DNS records unconfirmed |
+| `forgejo01`, ID `105`, `.22` | HTTP TCP `3000`; Git SSH host TCP `222` to container `22` | `forgejo.tf` |
+| `npm01`, ID `106`, `.23` | HTTP `80`, HTTPS `443`, administration `81`; historical wildcard `*.home.lab` / `home.lab` | `npm.tf`; current proxy routes unconfirmed |
+| `tailscale-router`, ID `107`, `.4` | Advertised `192.168.55.0/24`; `--accept-dns=false`; IPv4/IPv6 forwarding enabled | `tailscale.tf`; approval and ACLs unconfirmed |
+
+Historical Forgejo/NPM provisioning used public DNS resolvers `8.8.8.8` and `8.8.4.4` and disabled Docker IPv6; Homepage also disabled Docker IPv6. These workarounds must not be mistaken for the current LAN DNS policy or reapplied from this documentation. The historical `qnap.lab` dashboard link is ambiguous and does not establish a current Proxmox hostname.
+
+`wiki01` has status **historical / probably removed**. According to the administrator, it is not running and was probably removed from Proxmox `dtcode`; the administrator also reports that the latest old `terraform.tfstate` no longer contains this VM. These statements were not independently verified in this local review; absence from state alone does not prove removal from Proxmox.
+
+**Historically reused identifiers and addresses:** VM ID `104` on `dtcode`, formerly used by `wiki01`, now belongs to `bao01`. IP `192.168.55.21`, referenced by historical `wiki01` and `test-vm`, now belongs to `mysql01` on `dom`. These are historical reassignments, not active collisions; the identifiers and address are currently allocated and must not be restored from old definitions.
+
+`test-vm` remains **historical**; its current presence cannot be confirmed. No active definitions or recreation plans are added for either historical guest.
+
+See the [dtcode inventory](../hosts/dtcode.md) and individual [guest documents](../vms/).
 
 ## Proxmox networking
 

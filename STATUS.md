@@ -1,6 +1,6 @@
 # Infrastructure Status
 
-Last updated: `2026-08-18`
+Last documentation reconciliation: `2026-10-04` (local review only). Operational observations below were previously recorded on `2026-08-17`–`2026-08-18`; they were not revalidated against infrastructure.
 
 ## Current state
 
@@ -267,6 +267,22 @@ The plaintext snapshot was removed after successful encryption verification.
 Only the encrypted `.snap.gpg` backup is retained.
 
 OpenBao backup creation is not yet automated.
+
+## Historical knowledge reconciliation
+
+The current repository remains the primary infrastructure repository. `/home/tom/Projekty/infrastructure-old/homelab` is an archival knowledge source only. Historical Terraform definitions were read locally; no old code, state, secret values or keys were imported.
+
+The five legacy services now have documentation covering IDs, addresses, purpose, historical allocation, persistent data and earlier provisioning: [dns01](docs/vms/dns01.md), [home01](docs/vms/home01.md), [forgejo01](docs/vms/forgejo01.md), [npm01](docs/vms/npm01.md), [tailscale-router](docs/vms/tailscale-router.md). They remain documented legacy resources with no current Terraform or Ansible definitions. Future adoption is planned only after verification and explicit approval.
+
+`dtcode` is an existing physical host, documented rather than lifecycle-managed by current Terraform/Ansible. `bao01` and `mysql01` have both current Terraform and Ansible definitions and previously documented deployment. Current code also defines `qdrant01`, `langfuse01`, `grafana01` and `cloudflare01` with Ansible inventory/playbooks. Their deployment and current state membership are unconfirmed in this review; code presence alone does not establish operation. The earlier Terraform/Ansible sections describe the previously documented operational subset, not the full current code inventory. See [management classification](INVENTORY.md#management-classification-and-historical-evidence).
+
+`wiki01` has status **historical / probably removed**. According to the administrator, it is not running and was probably removed from Proxmox `dtcode`; the administrator also reports that the latest old `terraform.tfstate` no longer contains this VM. These statements were not independently verified in this local review; absence from state alone does not prove removal from Proxmox.
+
+**Historically reused identifiers and addresses:** VM ID `104` on `dtcode`, formerly used by `wiki01`, now belongs to `bao01`. IP `192.168.55.21`, referenced by historical `wiki01` and `test-vm`, now belongs to `mysql01` on `dom`. These are historical reassignments, not active collisions; the identifiers and address are currently allocated and must not be restored from old definitions.
+
+`test-vm` remains **historical**; its current presence cannot be confirmed. No active definitions or recreation plans are added for either historical guest.
+
+Unconfirmed: actual legacy configuration drift, current images and disk sizes, DNS/proxy routes, certificate provenance, Tailscale approvals/ACLs, data locations and contents, backup coverage and restore capability. Historical definitions do not confirm execution, simultaneous operation or decommissioning dates. Laptop work is limited to local code/documentation review; infrastructure checks require a separately authorized operational environment.
 
 ## Existing dtcode resources
 

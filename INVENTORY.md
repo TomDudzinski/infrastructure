@@ -8,11 +8,11 @@ Detailed configuration, dependencies, persistent data, backup, and recovery info
 
 | Status | Meaning |
 |---|---|
-| Verified | Confirmed directly on the system or in the current repository configuration |
+| Verified | Previously recorded verification; date and source must be checked. Local code inspection confirms definitions only, not deployment or runtime state |
 | Documented | Recorded in the project but not confirmed directly during the latest inventory review |
 | Planned | Target state that is not implemented yet |
 
-Inventory review date: `2026-08-18`
+Last documented operational inventory: `2026-08-18`. Historical-source reconciliation: `2026-10-04` (local files only; no live verification).
 
 ## Network
 
@@ -48,7 +48,7 @@ Detailed network configuration is maintained in `docs/network/NETWORK.md`.
 | Role | Smaller virtualization host |
 | Storage | `local`, `local-lvm` |
 | Network bridge | `vmbr0` |
-| Known workloads | VM IDs `101`, `103`, `105`-`107`, `999`; LXC ID `102` |
+| Known workloads | VM IDs `101`, `103`-`107`, `999`; LXC ID `102` |
 | Current management | Proxmox VE; Terraform and Ansible manage approved new resources including `bao01`; existing workloads remain outside the current Terraform state |
 | Target management | Terraform and Ansible |
 | Documentation | `docs/hosts/dtcode.md` |
@@ -144,14 +144,43 @@ The following machines already exist and must be preserved. Their live Proxmox c
 | ID | Type | Name | Address | Proxmox host | State | Management status | Documentation |
 |---:|---|---|---|---|---|---|---|
 | 101 | VM template | `ubuntu-2404` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
-| 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/dns01.md` |
-| 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/home01.md` |
+| 102 | LXC | `dns01` | `192.168.55.10` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/dns01.md` |
+| 103 | VM | `home01` | `192.168.55.20` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/home01.md` |
 | 104 | VM | `bao01` | `192.168.55.24` | `dtcode` | Running | Managed by current Terraform state and Ansible | `docs/vms/bao01.md` |
-| 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/forgejo01.md` |
-| 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/npm01.md` |
-| 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Tagged `terraform`; previous state not found | `docs/vms/tailscale-router.md` |
+| 105 | VM | `forgejo01` | `192.168.55.22` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/forgejo01.md` |
+| 106 | VM | `npm01` | `192.168.55.23` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/npm01.md` |
+| 107 | VM | `tailscale-router` | `192.168.55.4` | `dtcode` | Running | Existing legacy; historical Terraform code recovered; no current Terraform/Ansible definition | `docs/vms/tailscale-router.md` |
 | 201 | VM | mysql01 | 192.168.55.21 | dom | Running | Managed by current Terraform state and Ansible | docs/vms/mysql01.md |
 | 999 | VM template | `ubuntu-temp` | Not applicable | `dtcode` | Stopped template | Existing; unmanaged by current state | Documentation required |
+
+## Management classification and historical evidence
+
+Classification describes both resource lifecycle and management coverage; these are separate dimensions. **Legacy** means an existing resource retained from earlier infrastructure. **Current Terraform/Ansible** means a definition exists in this repository; it does not alone prove deployment or state membership. **Documented only** means no current management definition. **Historical** means archival evidence, not an active resource entry. **Planned** means a proposed future action without deployment confirmation.
+
+| Resource | Lifecycle / evidence | Current Terraform | Current Ansible | Documentation / planned work |
+|---|---|---|---|---|
+| `dtcode` | Existing physical host; prior inventory | No host lifecycle definition; provider target only | No current host inventory entry | Documented only; preserve host and legacy guests |
+| `dns01` | Existing legacy LXC, ID `102` | No | No | Documented only; verify before any adoption |
+| `home01` | Existing legacy VM, ID `103` | No | No | Documented only; verify before any adoption |
+| `forgejo01` | Existing legacy VM, ID `105` | No | No | Documented only; verify before any adoption |
+| `npm01` | Existing legacy VM, ID `106` | No | No | Documented only; verify before any adoption |
+| `tailscale-router` | Existing legacy VM, ID `107` | No | No | Documented only; verify before any adoption |
+| `bao01` | Deployment recorded in prior documentation, ID `104` | Definition present; management previously documented | Inventory and bootstrap present | Current managed scope; no new runtime verification |
+| `mysql01` | Deployment recorded in prior documentation, ID `201` | Definition present; management previously documented | Inventory and bootstrap present | Current managed scope; no new runtime verification |
+| `qdrant01` | VM ID `202`, `192.168.55.25`, `dom`; code evidence only in this review | Definition present | Inventory and bootstrap present | Deployment/state membership unconfirmed; no runtime status asserted |
+| `langfuse01` | VM ID `203`, `192.168.55.26`, `dom`; code evidence only in this review | Definition present | Inventory and bootstrap present | Deployment/state membership unconfirmed; no runtime status asserted |
+| `grafana01` | VM ID `204`, `192.168.55.27`, `dom`; code evidence only in this review | Definition present | Inventory and bootstrap present | Deployment/state membership unconfirmed; no runtime status asserted |
+| `cloudflare01` | VM ID `205`, `192.168.55.28`, `dom`; code evidence only in this review | Definition present | Inventory and bootstrap present | Deployment/state membership unconfirmed; no runtime status asserted |
+| `wiki01` | Historical / probably removed; former VM ID `104`, former IP `192.168.55.21` | No | No | Administrator reports not running, probably removed, and absent from latest old state; not independently verified |
+| `test-vm` | Historical `vm.tf_old`, VM ID `301`, former IP `192.168.55.21` | No | No | Archive only; current presence unconfirmed; no recreation planned |
+
+Historical sources: `/home/tom/Projekty/infrastructure-old/homelab/terraform/environments/dev/{technitium-dns,homepage,forgejo,npm,tailscale,wiki}.tf` and `vm.tf_old`. The old repository is a read-only knowledge source, not the management repository. State files, credentials and keys were not copied. A historical `terraform` tag is not proof of current management.
+
+`wiki01` has status **historical / probably removed**. According to the administrator, it is not running and was probably removed from Proxmox `dtcode`; the administrator also reports that the latest old `terraform.tfstate` no longer contains this VM. These statements were not independently verified in this local review; absence from state alone does not prove removal from Proxmox.
+
+**Historically reused identifiers and addresses:** VM ID `104` on `dtcode`, formerly used by `wiki01`, now belongs to `bao01`. IP `192.168.55.21`, referenced by historical `wiki01` and `test-vm`, now belongs to `mysql01` on `dom`. These are historical reassignments, not active collisions; the identifiers and address are currently allocated and must not be restored from old definitions.
+
+`test-vm` remains **historical**; its current presence cannot be confirmed. No active definitions or recreation plans are added for either historical guest.
 
 ## Backup inventory
 
@@ -171,8 +200,8 @@ The following machines already exist and must be preserved. Their live Proxmox c
 
 | Area | Current state | Target state |
 |---|---|---|
-| Infrastructure lifecycle | New resources on `dom` managed by Terraform; existing `dtcode` resources remain outside current state | Terraform for new resources and controlled imports |
-| Operating system configuration | Ansible manages `mysql01` | Extend Ansible coverage to approved guests |
+| Infrastructure lifecycle | Current Terraform definitions on `dom` and `dtcode`; five legacy guests on `dtcode` remain outside current management | Terraform for new resources and controlled imports |
+| Operating system configuration | Ansible definitions cover `mysql01`, `bao01`, `iza`, `qdrant01`, `langfuse01`, `grafana01`, `cloudflare01`; execution not verified in this review | Extend Ansible coverage to approved guests |
 | Containerized applications | Docker Compose | Docker Compose |
 | Secrets | OpenBao deployed on `bao01`; migration of existing secrets is in progress | OpenBao as the central secrets-management and PKI platform |
 | Backup | Restic with local and QNAP-related infrastructure | Restic and QNAP |
@@ -189,7 +218,7 @@ The following information still requires live verification:
 - physical network devices, switches, and management interfaces
 - DHCP configuration and address reservations
 - complete DNS zone and reverse proxy inventory
-- persistent data locations for services outside `iza`
+- current persistent data locations for services outside `iza` (historical paths for five legacy guests are now documented)
 - backup coverage for every VM, LXC, service, and physical host
 - database-aware backup and restore procedure for `mysql01`
 - monitoring and alerting for `mysql01` and MySQL
