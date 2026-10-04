@@ -323,3 +323,20 @@ OpenBao is now operational, but several operational areas still require automati
 13. Implement backup monitoring and alerting.
 14. Review existing `dtcode` resources before any Terraform import.
 15. Continue migration of infrastructure management into Terraform and Ansible without unnecessarily rebuilding existing services.
+
+## Legacy definition update (2026-10-04)
+
+Five local Terraform definitions for `home01` (103), `forgejo01` (105), `npm01`
+(106), `tailscale-router` (107) and `dns01` (102) have been aligned with live
+hardware configuration supplied by the administrator. Four VM system disks
+are now explicitly declared as 32 GiB on `local-lvm` / `scsi0`; disk and VM OS
+lifecycle exclusions and historical VM clone blocks were removed. MAC addresses
+are preserved. `protection = false` reflects current protection=0; enabling it
+remains a future policy change. Terraform `prevent_destroy` remains enabled.
+
+These definitions do not establish Terraform state membership or deployment.
+No Terraform commands or infrastructure connections were performed on this
+laptop. This update supersedes the earlier statement that these five guests
+have no current Terraform definitions, and the disk-size uncertainty for the
+supplied hardware data; service/data/backup verification remains outstanding.
+See [adoption procedure and remaining uncertainties](terraform/README.md#prepared-legacy-adoption-on-dtcode-2026-10-04).
