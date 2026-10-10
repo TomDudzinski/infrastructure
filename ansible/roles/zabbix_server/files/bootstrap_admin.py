@@ -76,7 +76,8 @@ def main(settings, warnings=None):
         logout(token, warnings)
         return False
 
-    token = login('initial_login', 'zabbix')
+    initial_password = 'zabbix'
+    token = login('initial_login', initial_password)
     try:
         users = call('user_read', 'user.get',
                      {'output': ['userid'], 'filter': {'username': 'Admin'}}, token)
@@ -87,7 +88,8 @@ def main(settings, warnings=None):
             raise BootstrapError('user_read', 'INVALID_ADMIN_RESULT')
         user_id = users[0]['userid']
         result = call('password_update', 'user.update',
-                      {'userid': user_id, 'passwd': settings['password']}, token)
+                      {'userid': user_id, 'passwd': settings['password'],
+                       'current_passwd': initial_password}, token)
         if not isinstance(result, dict) or result.get('userids') != [user_id]:
             raise BootstrapError('password_update', 'UPDATE_NOT_CONFIRMED')
     finally:

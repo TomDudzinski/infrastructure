@@ -176,7 +176,10 @@ Tylko odrzucenie JSON-RPC logowania docelowego pozwala na zatwierdzoną próbę
 hasłem początkowym; błędy transportu i protokołu kończą bootstrap.
 
 Zmiana jest potwierdzana wyłącznie przez `result.userids` zgodne z odczytanym
-użytkownikiem. Działające hasło docelowe pomija aktualizację. Błąd wylogowania
+użytkownikiem. Dla Zabbix 7.0.31 żądanie `user.update` zawiera `current_passwd`
+z tym samym hasłem początkowym, którym powiodło się logowanie Admin, oraz
+`passwd` z hasłem docelowym. Oba hasła pozostają poza diagnostyką i logami.
+Działające hasło docelowe pomija aktualizację. Błąd wylogowania
 trafia do `warnings` i nie zmienia sukcesu w błąd ani nie przesłania pierwotnego
 błędu. Przy niepotwierdzonej aktualizacji wynik jest błędem; kolejne uruchomienie
 sprawdza hasło docelowe, więc może rozpoznać wcześniej wykonaną zmianę.

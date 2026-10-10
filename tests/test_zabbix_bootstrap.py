@@ -90,6 +90,44 @@ class BootstrapTests(unittest.TestCase):
                 self.assertEqual(result['code'], 'UPDATE_NOT_CONFIRMED')
                 self.assertTrue(result['failed'])
 
+    def test_update_sends_password_used_for_initial_login(self):
+        for response, expected_code in [
+                ({'result': {'userids': ['1']}}, None),
+                ({'result': {'userids': ['2']}}, 'UPDATE_NOT_CONFIRMED'),
+                ({'error': {'data': SECRET}}, 'RPC_ERROR')]:
+            with self.subTest(code=expected_code):
+                requests = []
+                responses = iter(self.prefix()[:3] + [response, {'result': True}])
+
+                def fake(request, timeout):
+                    requests.append(json.loads(request.data))
+                    return io.BytesIO(json.dumps(next(responses)).encode())
+
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with patch.object(bootstrap, 'urlopen', fake), \
+                        patch.object(bootstrap.sys, 'stdin', io.StringIO(json.dumps(SETTINGS))), \
+                        patch.object(bootstrap.sys, 'stdout', stdout), \
+                        patch.object(bootstrap.sys, 'stderr', stderr):
+                    status = bootstrap.cli()
+                initial_login = requests[1]['params']
+                update = requests[3]['params']
+                self.assertEqual(requests[1]['method'], 'user.login')
+                self.assertEqual(requests[3]['method'], 'user.update')
+                self.assertEqual(initial_login['password'], 'zabbix')
+                self.assertEqual(update, {'userid': '1', 'passwd': SECRET,
+                                          'current_passwd': initial_login['password']})
+                self.assertEqual(requests[-1]['method'], 'user.logout')
+                result = json.loads(stdout.getvalue())
+                self.assertEqual(status, 1 if expected_code else 0)
+                self.assertEqual(result['failed'], expected_code is not None)
+                self.assertEqual(result['changed'], expected_code is None)
+                if expected_code:
+                    self.assertEqual((result['stage'], result['code']),
+                                     ('password_update', expected_code))
+                for secret in (SECRET, initial_login['password']):
+                    self.assertNotIn(secret, stdout.getvalue() + stderr.getvalue())
+                self.assertEqual(stderr.getvalue(), '')
+
     def test_invalid_tokens_and_user_shapes(self):
         for token in ('', None, {}, True):
             result, calls = self.execute([{'result': token}])
