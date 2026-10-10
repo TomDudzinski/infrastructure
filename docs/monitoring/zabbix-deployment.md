@@ -181,15 +181,17 @@ trafia do `warnings` i nie zmienia sukcesu w błąd ani nie przesłania pierwotn
 błędu. Przy niepotwierdzonej aktualizacji wynik jest błędem; kolejne uruchomienie
 sprawdza hasło docelowe, więc może rozpoznać wcześniej wykonaną zmianę.
 
-Zadanie Ansible zachowuje `no_log: true` i `diff: false`; diagnostyka nadal jest
-ukryta w jego zwykłym wyniku. Proponowany sposób udostępnienia jej operatorowi:
-osobny blok `always` po zadaniu, emitujący wyłącznie pola `stage`, `code` oraz
-ostrzeżenia po sprawdzeniu ich względem zamkniętej listy wartości. Parsowanie
-zarejestrowanego stdout i budowa komunikatu muszą mieć `no_log: true`; publiczny
-`debug` powinien otrzymać wyłącznie zweryfikowany komunikat. Przy błędzie
-parsowania należy pokazać stałe `DIAGNOSTIC_UNAVAILABLE`, bez surowego wyniku.
-Nie wyświetlać całego `zabbix_admin_result`, `stdout`, `stderr` ani stdin.
-Ten dodatkowy przepływ Ansible jest propozycją; nie zmieniono zadania playbooka.
+Zadanie Ansible zachowuje `no_log: true` i `diff: false`. Lokalny filtr roli
+`zabbix_bootstrap_diagnostic` parsuje JSON, wymaga rzeczywistych wartości bool
+dla `failed` i `changed` oraz sprawdza `stage` i `code` względem zamkniętych list.
+Zadanie parsujące również ma `no_log: true`. Osobne `ansible.builtin.fail`
+zatrzymuje wykonanie i pokazuje tylko `stage` oraz `code`, bez ostrzeżeń ani
+surowego `stdout`, `stderr`, stdin, haseł i tokenów. Nieprawidłowy wynik daje
+`stage=input code=DIAGNOSTIC_UNAVAILABLE`. Niezerowy kod wyjścia nigdy nie
+jest sukcesem, a `failed=true` zatrzymuje wykonanie także przy kodzie wyjścia 0.
+`changed_when` uznaje zmianę tylko dla zweryfikowanego sukcesu z `changed=true`;
+ponowne wykonanie z aktualnym hasłem pozostaje bez zmian. W check mode wszystkie
+trzy zadania są pomijane. Przepływ przygotowano lokalnie, bez wdrożenia.
 
 Szablon serwera ustawia `PidFile=/run/zabbix/zabbix_server.pid`, zgodnie ze
 ścieżką `PIDFile` zgłoszonej jednostki systemd z `Type=forking`. Zapobiega to
@@ -307,6 +309,14 @@ konfiguracji i zaszyfrowanych sekretów jest warunkiem odtwarzania; nie kasuj ba
 ani VM w celu ponowienia playbooków. Nie dodano harmonogramu backupu Zabbix.
 
 ## Wynik lokalnej kontroli (2026-10-10)
+
+Po dodaniu bezpiecznej diagnostyki w Ansible:
+`python3 -B -m unittest discover -s tests -v` — 47 testów, 44 zaliczone,
+3 pominięte (brak PyYAML/Jinja2 i lokalnego `.deb`). Osiem nowych testów sprawdza
+filtr używany przez rolę: sukces i powtórzenie, błąd, nieprawidłowy JSON,
+zamknięte wartości i typy, sprzeczny kod wyjścia oraz brak ujawnienia sekretów.
+Lokalny Ansible jest niedostępny, więc nie wykonano `--syntax-check` ani testu
+wykonania zadań przez Ansible. Wynik dotyczy testów Python i kontroli statycznej.
 
 Po poprawce diagnostyki bootstrapu: `python3 -B -m unittest discover -s tests -v`
 — 39 testów, 36 zaliczonych, 3 pominięte (brak PyYAML/Jinja2 i lokalnego `.deb`).

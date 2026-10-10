@@ -175,7 +175,22 @@
     argv: [python3, /usr/local/lib/zabbix-bootstrap-admin.py]
     stdin: "{{ {'password': vault_zabbix_admin_password, 'allow_initial_password': zabbix_initial_admin_bootstrap_approved | default(false) | bool} | to_json }}"
   register: zabbix_admin_result
-  changed_when: (zabbix_admin_result.stdout | from_json).changed
+  changed_when: (zabbix_admin_result | zabbix_bootstrap_diagnostic).changed
+  # Defer failure to the sanitized diagnostic task below, never to raw output.
+  failed_when: false
   no_log: true
   diff: false
   when: not ansible_check_mode
+
+- name: Validate and sanitize administrator bootstrap JSON
+  ansible.builtin.set_fact:
+    zabbix_admin_diagnostic: "{{ zabbix_admin_result | zabbix_bootstrap_diagnostic }}"
+  no_log: true
+  when: not ansible_check_mode
+
+- name: Stop before publishing DNS and NPM if administrator bootstrap failed
+  ansible.builtin.fail:
+    msg: "stage={{ zabbix_admin_diagnostic.stage }} code={{ zabbix_admin_diagnostic.code }}"
+  when:
+    - not ansible_check_mode
+    - zabbix_admin_diagnostic.failed
