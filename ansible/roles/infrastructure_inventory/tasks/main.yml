@@ -1,0 +1,52 @@
+---
+- name: Initialize collected files
+  ansible.builtin.set_fact:
+    infrastructure_inventory_files: []
+
+- name: Collect without persistent installation
+  become: true
+  block:
+    - name: Create private temporary directory on target
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: infrastructure-inventory-
+      register: infrastructure_inventory_remote
+
+    - name: Copy existing collector
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../scripts/infrastructure_inventory.py"
+        dest: "{{ infrastructure_inventory_remote.path }}/collector.py"
+        mode: '0600'
+
+    - name: Execute host-local read-only collectors
+      ansible.builtin.command:
+        argv: "{{ [infrastructure_inventory_python, infrastructure_inventory_remote.path + '/collector.py', 'collect', item, '--output', infrastructure_inventory_remote.path + '/' + item + '.json'] + (['--node', infrastructure_inventory_node] if item == 'proxmox' else []) }}"
+      loop: "{{ infrastructure_inventory_collectors }}"
+      register: infrastructure_inventory_results
+      changed_when: false
+      failed_when: infrastructure_inventory_results.rc not in [0, 2]
+      no_log: true
+
+    - name: Fetch validated JSON to controller
+      ansible.builtin.fetch:
+        src: "{{ infrastructure_inventory_remote.path }}/{{ item }}.json"
+        dest: "{{ infrastructure_inventory_run.path }}/{{ inventory_hostname }}-{{ item }}.json"
+        flat: true
+      loop: "{{ infrastructure_inventory_collectors }}"
+      no_log: true
+
+    - name: Record successfully fetched files
+      ansible.builtin.set_fact:
+        infrastructure_inventory_files: "{{ infrastructure_inventory_files + [infrastructure_inventory_run.path + '/' + inventory_hostname + '-' + item + '.json'] }}"
+      loop: "{{ infrastructure_inventory_collectors }}"
+  rescue:
+    - name: Report missing host observations without raw diagnostics
+      ansible.builtin.debug:
+        msg: "Collection failed for {{ inventory_hostname }}; this host is omitted from the partial report."
+  always:
+    - name: Remove temporary collector and results from target
+      ansible.builtin.file:
+        path: "{{ infrastructure_inventory_remote.path }}"
+        state: absent
+      when: infrastructure_inventory_remote.path is defined
+      no_log: true

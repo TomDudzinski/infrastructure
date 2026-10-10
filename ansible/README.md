@@ -194,3 +194,29 @@ A fully converged host should complete with:
 changed=0
 failed=0
 ```
+
+## Infrastructure inventory collection (prepared, not runtime verified)
+
+`playbooks/infrastructure-inventory.yml` uses the existing Linux, Docker and
+Proxmox collectors. It assigns no service configuration roles. `proxmox_hosts`
+contains `dom` (`192.168.55.3`) and `dtcode` (`192.168.55.6`), both using root
+and `/home/tom/.ssh/homelab_automation_ed25519`. These access settings are
+requested configuration, not evidence of verified connectivity.
+
+See [collection procedure](../docs/infrastructure/README.md#integracja-z-ansible).
+Run only on `iza`, never on the development laptop. An explicit `--limit` is
+required. From the repository root on `iza`:
+
+```bash
+cd ansible
+ansible-playbook -i inventories/production/hosts.yml \
+  playbooks/infrastructure-inventory.yml --limit 'iza,dom,dtcode' --ask-become-pass
+```
+
+Local static commands (no host connections):
+
+```bash
+ansible-inventory -i inventories/production/hosts.yml --graph
+ansible-playbook playbooks/infrastructure-inventory.yml --syntax-check
+ansible-playbook playbooks/infrastructure-inventory.yml --list-hosts --limit 'dom'
+```

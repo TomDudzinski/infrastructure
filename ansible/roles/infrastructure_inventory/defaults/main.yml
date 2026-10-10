@@ -1,0 +1,4 @@
+---
+infrastructure_inventory_collectors: "{{ ['linux', 'proxmox'] if 'proxmox_hosts' in group_names else ['linux', 'docker'] }}"
+infrastructure_inventory_node: "{{ inventory_hostname }}"
+infrastructure_inventory_python: python3

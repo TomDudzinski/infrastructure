@@ -1,0 +1,56 @@
+---
+- name: Collect infrastructure observations from explicitly selected hosts
+  hosts: all
+  gather_facts: false
+  pre_tasks:
+    - name: Require explicit scope and disallow execution on development laptop
+      ansible.builtin.assert:
+        that:
+          - ansible_limit is defined
+          - ansible_limit | default('') | length > 0
+          - not ansible_check_mode
+          - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+        fail_msg: Run from iza with an explicit --limit; check mode is not collection.
+      delegate_to: localhost
+      run_once: true
+
+    - name: Create private isolated output directory on controller
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: infrastructure-inventory-
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: infrastructure_inventory_run
+
+  roles:
+    - infrastructure_inventory
+
+  post_tasks:
+    - name: Select only successful files from this run and scope
+      ansible.builtin.set_fact:
+        infrastructure_inventory_inputs: "{{ (infrastructure_inventory_inputs | default([])) + hostvars[item].get('infrastructure_inventory_files', []) }}"
+      loop: "{{ ansible_play_hosts_all }}"
+      run_once: true
+
+    - name: Require at least one successful host
+      ansible.builtin.assert:
+        that: infrastructure_inventory_inputs | length > 0
+        fail_msg: No JSON fetched; no report generated.
+      run_once: true
+
+    - name: Generate partial report locally from fetched JSON
+      ansible.builtin.command:
+        argv: "{{ ['python3', '-B', playbook_dir + '/../../scripts/infrastructure_inventory.py', 'report'] + infrastructure_inventory_inputs + ['--output', infrastructure_inventory_run.path + '/report'] }}"
+      delegate_to: localhost
+      become: false
+      run_once: true
+      changed_when: true
+      no_log: true
+
+    - name: Show report location and selected hosts
+      ansible.builtin.debug:
+        msg:
+          - "Report: {{ infrastructure_inventory_run.path }}/report"
+          - "Selected hosts: {{ ansible_play_hosts_all | join(', ') }}. Review omissions and coverage before interpreting changes."
+      run_once: true
