@@ -6,7 +6,8 @@
       "domain": "home.home.lab",
       "ip": "192.168.55.20",
       "port": 3000,
-      "protocol": null,
+      "protocol": "http",
+      "websocket": true,
       "npm_enabled": false,
       "source": "docs/vms/home01.md"
     },
@@ -36,7 +37,8 @@
       "domain": "chat.home.lab",
       "ip": "192.168.55.7",
       "port": 3000,
-      "protocol": null,
+      "protocol": "http",
+      "websocket": true,
       "npm_enabled": false,
       "source": "compose/open-webui/compose.yaml"
     },
@@ -46,7 +48,8 @@
       "domain": "vsc.home.lab",
       "ip": "192.168.55.7",
       "port": 8443,
-      "protocol": null,
+      "protocol": "http",
+      "websocket": true,
       "npm_enabled": false,
       "source": "compose/code-server/compose.yaml"
     },
@@ -56,7 +59,8 @@
       "domain": "jupyter.home.lab",
       "ip": "192.168.55.7",
       "port": 8888,
-      "protocol": null,
+      "protocol": "http",
+      "websocket": true,
       "npm_enabled": false,
       "source": "compose/jupyter/compose.yaml"
     },

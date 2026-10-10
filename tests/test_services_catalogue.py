@@ -41,9 +41,21 @@ class CatalogueTests(unittest.TestCase):
             'dtcode': 'pve-dtcode.home.lab',
         }
         self.assertEqual({key: service['domain'] for key, service in self.services.items()}, expected)
-        for key in ('homepage', 'open_webui', 'vscode', 'jupyter'):
+
+    def test_api_confirmed_upstreams(self):
+        expected = {
+            'homepage': ('192.168.55.20', 3000),
+            'open_webui': ('192.168.55.7', 3000),
+            'vscode': ('192.168.55.7', 8443),
+            'jupyter': ('192.168.55.7', 8888),
+        }
+        for key, endpoint in expected.items():
             with self.subTest(service=key):
-                self.assertIsNone(self.services[key]['protocol'])
+                service = self.services[key]
+                self.assertEqual((service['ip'], service['port']), endpoint)
+                self.assertEqual(service['protocol'], 'http')
+                self.assertIs(service['websocket'], True)
+                self.assertIs(service['npm_enabled'], False)
 
     def test_duplicate_domains_case_and_trailing_dot(self):
         self.services['npm']['domain'] = 'GIT.HOME.LAB.'
@@ -66,7 +78,8 @@ class CatalogueTests(unittest.TestCase):
 
     def test_websocket_optional_boolean_and_unknown_fields(self):
         # Existing services do not need a schema migration.
-        self.assertNotIn('websocket', self.services['homepage'])
+        self.services['homepage'].pop('websocket')
+        validator.validate_catalogue(self.data)
         for value in (True, False):
             self.services['homepage']['websocket'] = value
             validator.validate_catalogue(self.data)

@@ -31,9 +31,17 @@ Homepage `home.home.lab`, NPM `proxy.home.lab`, Technitium `dns.home.lab`,
 Open WebUI `chat.home.lab`, VS Code `vsc.home.lab`, Jupyter `jupyter.home.lab`.
 These catalogue updates were checked offline only; no API was contacted and no
 proxy configuration was applied. Existing endpoints, sources and `npm_enabled`
-flags are unchanged. Upstream protocols remain `null` for Homepage, Open WebUI,
-VS Code and Jupyter: published ports alone do not prove HTTP/TLS. Jupyter's
-8888 is the Compose default; the effective `JUPYTER_PORT` remains unverified.
+flags are unchanged. Based on the administrator-confirmed prior NPM API read,
+Homepage (`192.168.55.20:3000`), Open WebUI (`192.168.55.7:3000`),
+VS Code (`192.168.55.7:8443`) and Jupyter (`192.168.55.7:8888`) now declare
+`protocol: http` and `websocket: true`.
+
+The expected comparison with the last visible NPM snapshot is 8 `matching`,
+0 `conflict`, 3 `missing` (Zabbix, dom, dtcode) and 1 `unmanaged`
+(`sdns.home.lab`). Snapshot completeness remains **unverified**; `missing`
+means absent from the visible snapshot, not proven absent from NPM. A synthetic
+offline regression covers this outcome; the actual last API snapshot is not
+archived in the repository and was not fetched or rechecked during this change.
 Zabbix's endpoint is prepared configuration, not evidence of deployment.
 
 The file uses JSON syntax, a valid YAML subset supported by Ansible, so local

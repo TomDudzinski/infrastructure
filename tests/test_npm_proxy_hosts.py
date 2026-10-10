@@ -45,6 +45,42 @@ class ProxyHostsTests(unittest.TestCase):
         self.assertIn({'proxy_host_id': 30, 'domains': ['grafana.tdcode.pl'],
                        'reason': 'domains_outside_catalogue'}, report['unmanaged'])
 
+    def test_completed_catalogue_expected_visible_snapshot(self):
+        # Synthetic routing regression, not an archived API response. The four
+        # updated upstreams are administrator-confirmed; other routes model the
+        # requested comparison outcome. IDs are local test identifiers only.
+        routes = [
+            ('home.home.lab', '192.168.55.20', 3000, 'http', True),
+            ('proxy.home.lab', '192.168.55.23', 81, 'http', False),
+            ('dns.home.lab', '192.168.55.10', 5380, 'http', False),
+            ('chat.home.lab', '192.168.55.7', 3000, 'http', True),
+            ('vsc.home.lab', '192.168.55.7', 8443, 'http', True),
+            ('jupyter.home.lab', '192.168.55.7', 8888, 'http', True),
+            ('git.home.lab', '192.168.55.22', 3000, 'http', False),
+            ('bao01.home.lab', '192.168.55.24', 8200, 'https', False),
+            ('sdns.home.lab', '192.0.2.1', 80, 'http', False),
+        ]
+        self.hosts = [
+            dict(id=index, domain_names=[domain], forward_host=ip,
+                 forward_port=port, forward_scheme=protocol, enabled=True,
+                 allow_websocket_upgrade=websocket)
+            for index, (domain, ip, port, protocol, websocket)
+            in enumerate(routes, start=1)
+        ]
+        report = self.compare()
+        self.assertEqual({key: len(report[key]) for key in
+                          ('matching', 'conflict', 'missing', 'unmanaged')},
+                         dict(matching=8, conflict=0, missing=3, unmanaged=1))
+        self.assertEqual({row['service'] for row in report['matching']},
+                         set(self.services) - {'zabbix', 'dom', 'dtcode'})
+        self.assertEqual({row['service'] for row in report['missing']},
+                         {'zabbix', 'dom', 'dtcode'})
+        self.assertEqual(report['unmanaged'][0]['domains'], ['sdns.home.lab'])
+        self.assertTrue(all(row['npm_enabled'] is False for row in report['matching']))
+        self.assertEqual(report['snapshot_visibility']['completeness'], 'unverified')
+        self.assertEqual(report['snapshot_visibility']['warning'],
+                         'owner_permissions_may_limit_visibility')
+
     def test_no_input_mutation_or_raw_config_disclosure(self):
         before = copy.deepcopy((self.services, self.hosts))
         self.hosts[1]['token'] = 'test-secret-do-not-report'
