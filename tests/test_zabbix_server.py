@@ -1,5 +1,6 @@
 """Offline regressions: fake psql/gzip only, no database or network access."""
 import os
+import configparser
 from pathlib import Path
 import subprocess
 import tempfile
@@ -10,6 +11,49 @@ ROLE = ROOT / 'ansible/roles/zabbix_server'
 
 
 class ServerTests(unittest.TestCase):
+    def test_pid_matches_reported_systemd_unit(self):
+        # Contract supplied in the incident report: Type=forking and this PIDFile.
+        config = (ROLE / 'templates/zabbix_server.conf.j2').read_text()
+        pid_files = [line.split('=', 1)[1].strip() for line in config.splitlines()
+                     if line.startswith('PidFile=')]
+        self.assertEqual(pid_files, ['/run/zabbix/zabbix_server.pid'])
+
+    @unittest.skipUnless(os.environ.get('ZABBIX_SERVER_DEB'),
+                         'set ZABBIX_SERVER_DEB to inspect a local package offline')
+    def test_local_package_pid_and_runtime_directory(self):
+        package = Path(os.environ['ZABBIX_SERVER_DEB']).resolve()
+        version = subprocess.check_output(
+            ['dpkg-deb', '-f', str(package), 'Version'], text=True).strip()
+        self.assertEqual(version, '1:7.0.31-1+ubuntu24.04')
+        with tempfile.TemporaryDirectory() as directory:
+            subprocess.run(['dpkg-deb', '-x', str(package), directory], check=True)
+            root = Path(directory)
+            units = list(root.rglob('zabbix-server.service'))
+            self.assertEqual(len(units), 1)
+            unit = configparser.ConfigParser(interpolation=None, strict=False)
+            unit.read(units[0])
+            service = unit['Service']
+            self.assertEqual(service['Type'], 'forking')
+            config = (ROLE / 'templates/zabbix_server.conf.j2').read_text()
+            self.assertIn('\nPidFile=' + service['PIDFile'] + '\n', config)
+            self.assertEqual(service['PIDFile'], '/run/zabbix/zabbix_server.pid')
+            if service.get('RuntimeDirectory') == 'zabbix':
+                self.assertEqual(service['User'], 'zabbix')
+                self.assertEqual(service.get('Group', service['User']), 'zabbix')
+                self.assertEqual(int(service.get('RuntimeDirectoryMode', '0755'), 8), 0o755)
+            else:
+                entries = []
+                for path in root.rglob('*.conf'):
+                    if path.parent.name == 'tmpfiles.d':
+                        entries.extend(line.split() for line in path.read_text().splitlines()
+                                       if line.strip() and not line.lstrip().startswith('#'))
+                runtime = [entry for entry in entries
+                           if len(entry) >= 5 and entry[1] in ('/run/zabbix', '/var/run/zabbix')]
+                self.assertEqual(len(runtime), 1)
+                self.assertEqual(runtime[0][0], 'd')
+                self.assertEqual(int(runtime[0][2], 8), 0o755)
+                self.assertEqual(runtime[0][3:5], ['zabbix', 'zabbix'])
+
     def run_schema(self, tables='0', fail='', gzip_fail=False):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)

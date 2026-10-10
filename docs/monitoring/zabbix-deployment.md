@@ -161,6 +161,24 @@ zabbix_ip      = "192.168.55.29"
 
 ## Testy offline na laptopie lub iza
 
+Szablon serwera ustawia `PidFile=/run/zabbix/zabbix_server.pid`, zgodnie ze
+ścieżką `PIDFile` zgłoszonej jednostki systemd z `Type=forking`. Zapobiega to
+oczekiwaniu systemd na inny plik PID podczas zadania `Enable services`.
+Nie zmieniamy jednostki ani nie dodajemy dublującego zarządzania katalogiem.
+Tworzenie `/run/zabbix` przez pakiet wymaga potwierdzenia: lokalnie nie ma pakietu
+ani jego jednostki, więc nie potwierdzono właściciela i uprawnień katalogu.
+Opcjonalny test rozpakowuje lokalny pakiet bez instalacji i bez wykonywania jego
+skryptów; sprawdza wersję, zgodność PID oraz `RuntimeDirectory` lub wpis tmpfiles
+z właścicielem `zabbix:zabbix` i trybem `0755`:
+
+```bash
+ZABBIX_SERVER_DEB=/path/to/zabbix-server-pgsql_7.0.31-1+ubuntu24.04_amd64.deb \
+  python3 -B -m unittest discover -s tests -p 'test_zabbix_server.py' -v
+```
+
+Bez `ZABBIX_SERVER_DEB` test pakietu jest pomijany; test regresyjny ścieżki PID
+działa zawsze. Nie stanowi to potwierdzenia uruchomienia usługi na serwerze.
+
 ```bash
 python3 -B -m unittest discover -s tests -p 'test_zabbix*.py' -v
 terraform -chdir=terraform fmt -check dom_zabbix01.tf
@@ -259,6 +277,11 @@ konfiguracji i zaszyfrowanych sekretów jest warunkiem odtwarzania; nie kasuj ba
 ani VM w celu ponowienia playbooków. Nie dodano harmonogramu backupu Zabbix.
 
 ## Wynik lokalnej kontroli (2026-10-10)
+
+Po poprawce PID pełny zestaw `python3 -B -m unittest discover -s tests -v`:
+32 testy, 29 zaliczonych, 3 pominięte (brak PyYAML/Jinja2 i lokalnego pakietu
+Zabbix do inspekcji). Test ścieżki PID zaliczony. Brak lokalnego Ansible
+uniemożliwia `--syntax-check`. Poprawki nie wdrożono.
 
 Testy Zabbix offline obejmują również import schematu z atrapami `psql`/`gzip`:
 pusta baza, ponowne wykonanie, nieprawidłowa istniejąca baza i błędy importu.
