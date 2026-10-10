@@ -1,5 +1,6 @@
 server {
-    listen 8080;
+    listen {{ zabbix_server_ip }}:8080;
+    listen 127.0.0.1:8080;
     server_name zabbix.home.lab;
     root /usr/share/zabbix;
     index index.php;
@@ -10,6 +11,7 @@ server {
     location ~ /\. { deny all; }
     location ~ ^/(conf|include|vendor|local)/ { deny all; }
     location ~ \.php$ {
+        try_files $uri =404;
         include fastcgi_params;
         fastcgi_param HTTP_AUTHORIZATION $http_authorization;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;

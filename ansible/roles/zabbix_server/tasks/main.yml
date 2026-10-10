@@ -24,6 +24,7 @@
 - name: Install repository
   ansible.builtin.apt:
     deb: /var/tmp/zabbix-server-release.deb
+    policy_rc_d: 101
 
 - name: Install server, frontend and database
   ansible.builtin.apt:
@@ -44,9 +45,15 @@
       - php8.3-ldap
       - php8.3-curl
     state: present
+    policy_rc_d: 101
     update_cache: true
-    cache_valid_time: 3600
   notify: Restart Zabbix server
+
+- name: Hold pinned Zabbix packages against unattended upgrades
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: [zabbix-server-pgsql, zabbix-frontend-php, zabbix-sql-scripts]
 
 - name: Start local database
   ansible.builtin.service:
@@ -79,23 +86,13 @@
       - zabbix_sql_files.stdout_lines | select('search', '/postgresql/server.sql.gz$') | list | length == 1
 
 - name: Import schema atomically only into an empty database
-  ansible.builtin.shell: |
-    set -eu
-    tables=$(psql -d zabbix -Atc "SELECT count(*) FROM pg_tables WHERE schemaname='public'")
-    if [ "$tables" = 0 ]; then
-      schema_tmp=$(mktemp)
-      trap 'rm -f "$schema_tmp"' EXIT
-      gzip -dc {{ (zabbix_sql_files.stdout_lines | select('search', '/postgresql/server.sql.gz$') | first) | quote }} > "$schema_tmp"
-      PGOPTIONS='-c role=zabbix' psql -d zabbix --single-transaction -v ON_ERROR_STOP=1 -f "$schema_tmp" >/dev/null
-      echo SCHEMA_IMPORTED
-    else
-      psql -d zabbix -Atc 'SELECT mandatory FROM dbversion' >/dev/null
-    fi
-  args:
+  ansible.builtin.script:
+    cmd: "import_schema.sh {{ (zabbix_sql_files.stdout_lines | select('search', '/postgresql/server.sql.gz$') | first) | quote }}"
     executable: /bin/bash
   become_user: postgres
   register: zabbix_schema
   changed_when: "'SCHEMA_IMPORTED' in zabbix_schema.stdout"
+  when: not ansible_check_mode
 
 - name: Configure Zabbix server
   ansible.builtin.template:
@@ -130,12 +127,26 @@
       post_max_size = 16M
   notify: Restart PHP
 
+- name: Disable the default nginx website
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
 - name: Restrict frontend to NPM and local API client
   ansible.builtin.template:
     src: nginx.conf.j2
     dest: /etc/nginx/sites-enabled/zabbix.conf
     mode: '0644'
   notify: Reload nginx
+
+- name: Validate frontend configuration before starting services
+  ansible.builtin.command:
+    argv: "{{ item }}"
+  loop:
+    - [php-fpm8.3, -t]
+    - [nginx, -t]
+  changed_when: false
 
 - name: Enable services
   ansible.builtin.service:

@@ -13,12 +13,37 @@ Terraform dodaje `zabbix01` na `dom`: Ubuntu 24.04 z istniejącego cloud image,
 wyłączona z konfiguracji (`zabbix_enabled=false`) do zatwierdzenia parametrów.
 Nie zmieniono definicji istniejących VM, backendu ani stanu Terraform.
 
-Zabbix 7.0 LTS, PostgreSQL, PHP 8.3/FPM i nginx działają na jednej nowej VM.
+Zabbix 7.0.31 LTS, PostgreSQL, PHP 8.3/FPM i nginx działają na jednej nowej VM.
 Schema jest importowana transakcyjnie wyłącznie do pustej bazy; istniejąca baza
 bez tabeli `dbversion` powoduje błąd, nie automatyczną naprawę. Hasło bazy ustawiane
 jest przy tworzeniu użytkownika; ponowne wykonanie nie zmienia go. Celowa rotacja
 wymaga `zabbix_rotate_db_password=true` wraz z nowym hasłem w Vault.
 Nie stosuj tej roli do istniejącego, obcego serwera Zabbix ani do zmiany gałęzi LTS.
+
+Konfiguracja serwera przypina trzy pakiety (`zabbix-server-pgsql`,
+`zabbix-frontend-php`, `zabbix-sql-scripts`) do `1:7.0.31-1+ubuntu24.04`.
+Pakiet repozytorium: `zabbix-release_7.0-5%2Bubuntu24.04_all.deb`, SHA256:
+`4f206504c2bc1cff36edf762e2274d0686b0e796b772533c95d04bbe265654de`.
+APT sprawdza checksum podczas wdrożenia. Pakiety Zabbix otrzymują `hold`, aby
+aktualizacje automatyczne nie zmieniły wersji. Kolejna aktualizacja wymaga osobnego
+przeglądu, backupu i świadomego zdjęcia hold na iza; rola nie wymusza downgrade.
+`policy_rc_d=101` blokuje start usług ze skryptów instalacyjnych przed konfiguracją.
+
+Nie instalujemy `zabbix-nginx-conf`: rola zarządza własną witryną i używa
+standardowego socketu puli `www` PHP 8.3. Pakiet dostarczyłby dodatkową konfigurację
+Nginx/PHP-FPM, której nie potrzebujemy. Domyślna witryna Nginx jest odłączana;
+frontend słucha na `192.168.55.29:8080` i `127.0.0.1:8080`, bez listenera IPv6.
+PHP odrzuca nieistniejące pliki; katalogi wewnętrzne frontendu są niedostępne.
+Handlery sprawdzają `php-fpm8.3 -t` i `nginx -t` przed restartem/reloadem.
+PostgreSQL jest używany lokalnie: aplikacje przez `127.0.0.1`, administracja schematu
+przez socket `/var/run/postgresql`, bez hasła w poleceniach. Na iza przed publikacją
+potwierdź, że PostgreSQL nie nasłuchuje poza loopback i nie ma zdalnych wpisów HBA.
+Skrypt importu używa `psql -X` i `ON_ERROR_STOP`; błąd odczytu, dekompresji lub
+importu kończy etap bez zgłoszenia sukcesu. Import nie jest migracją istniejącej bazy.
+Bootstrap używa loopback bez proxy środowiskowego, wymaga jednego konta Admin,
+sprawdza odpowiedź aktualizacji i zamyka sesję także przy błędzie. Ponowne wykonanie
+z aktualnym hasłem nie zmienia konta. Zmienione hasło Vault nie służy do rotacji
+istniejącego administratora; przy innym haśle i braku hasła początkowego etap odmawia.
 
 Frontend na 8080 przyjmuje ruch tylko z `npm01` i loopback. Technitium dostaje
 jeden rekord A `zabbix.home.lab -> 192.168.55.23`; NPM jedną trasę HTTP na nową VM,
@@ -51,10 +76,11 @@ na odpowiednich hostach. Dostęp WWW przez HTTP nie szyfruje logowania w LAN.
 
 ## Parametry do zatwierdzenia i przygotowania
 
-- Wolny IP w `192.168.55.0/24` i wolny VMID na `dom`; potwierdź brak kolizji także
+- Potwierdź dostępność docelowego IP `192.168.55.29` i wolny VMID na `dom`; sprawdź brak kolizji także
   z zasobami spoza Terraform. Nowa VM wymaga 40 GiB wolnego miejsca.
-- Dokładne wersje pakietów Zabbix 7.0 dla serwera i każdej dystrybucji agentów.
-  URL i SHA256 oficjalnego pakietu repozytorium serwera.
+- Wersje agentów dla każdej dystrybucji pozostają do zatwierdzenia. Parametry
+  serwera są przypięte w `group_vars/zabbix_servers.yml` (wartości podane przez
+  administratora; dostępności pakietów i checksum nie sprawdzano przez sieć).
 - Ubuntu 26.04 na `iza`: oficjalne natywne repozytorium Agent 2 i SHA256 są wymagane
   jako override istniejącej roli. Brak potwierdzonej obsługi blokuje wdrożenie na iza;
   nie podstawiaj repozytorium 24.04. Nie deklaruj ukończenia wszystkich 15 hostów
@@ -110,12 +136,9 @@ zatwierdzone przez administratora; wszystkie placeholdery zastąp przed użyciem
 
 ```yaml
 zabbix_deployment_approved: true
-zabbix_server_ip: <APPROVED_IP>
+# Adres wspólny pochodzi z group_vars/all/zabbix.yml: 192.168.55.29
 zabbix_initial_admin_bootstrap_approved: true
 zabbix_local_api_compatibility_approved: true
-zabbix_server_package_version: <EXACT_APT_VERSION_WITH_EPOCH>
-zabbix_repository_url: <OFFICIAL_7.0_UBUNTU_24.04_RELEASE_DEB_URL>
-zabbix_repository_checksum: sha256:<64_HEX>
 zabbix_agent_package_version: "{{ zabbix_agent_versions[inventory_hostname] }}"
 zabbix_agent_versions:
   dom: <EXACT_APT_VERSION>
@@ -133,7 +156,7 @@ Prywatny `zabbix.tfvars` w tym samym katalogu:
 ```hcl
 zabbix_enabled = true
 zabbix_vmid    = <APPROVED_VMID>
-zabbix_ip      = "<APPROVED_IP>"
+zabbix_ip      = "192.168.55.29"
 ```
 
 ## Testy offline na laptopie lub iza
@@ -237,8 +260,13 @@ ani VM w celu ponowienia playbooków. Nie dodano harmonogramu backupu Zabbix.
 
 ## Wynik lokalnej kontroli (2026-10-10)
 
-`python3 -B -m unittest discover -s tests -v`: 26 testów, 24 zaliczone,
-2 pominięte (brak PyYAML/Jinja2). `git diff --check`: bez błędów.
-Terraform oraz Ansible nie są dostępne w lokalnym środowisku, więc nie wykonano
-`fmt`, `validate` ani `--syntax-check`; pozostają wymaganymi kontrolami przed
-wdrożeniem. Nie wykonano połączeń do usług, plan/apply ani playbooków na hostach.
+Testy Zabbix offline obejmują również import schematu z atrapami `psql`/`gzip`:
+pusta baza, ponowne wykonanie, nieprawidłowa istniejąca baza i błędy importu.
+Nie wykonują zapytań do PostgreSQL. Sprawdzają też przypięte parametry,
+konfigurację usług i błędy bootstrapu przez atrapę HTTP.
+`python3 -B -m unittest discover -s tests -p 'test_zabbix*.py' -v`: 16 testów,
+14 zaliczonych, 2 pominięte. `bash -n` skryptu importu i `git diff --check`: bez błędów.
+Brak lokalnych PyYAML/Jinja2 oraz Ansible ogranicza walidację: parsowanie YAML,
+renderowanie szablonów i `--syntax-check` należy wykonać na iza przed wdrożeniem.
+Nie wykonano połączeń sieciowych ani wdrożenia. Wyniki testów są dowodem lokalnym,
+nie potwierdzeniem działania ani idempotencji na rzeczywistym serwerze.

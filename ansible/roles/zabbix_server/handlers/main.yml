@@ -4,6 +4,10 @@
     name: zabbix-server
     state: restarted
 - name: Restart PHP
+  ansible.builtin.command: php-fpm8.3 -t
+  changed_when: false
+  notify: Apply PHP configuration
+- name: Apply PHP configuration
   ansible.builtin.service:
     name: php8.3-fpm
     state: restarted

@@ -1,7 +1,10 @@
 """Set the initial Admin password through loopback API, without persisting a token."""
 import json
 import sys
-from urllib.request import Request, urlopen
+from urllib.request import Request, ProxyHandler, build_opener
+
+# The bootstrap must stay on loopback even when proxy environment variables exist.
+urlopen = build_opener(ProxyHandler({})).open
 
 
 def main(settings):
@@ -21,11 +24,17 @@ def main(settings):
         raise ValueError('Initial password bootstrap has not been approved')
     login = call('user.login', {'username': 'Admin', 'password': 'zabbix'})
     token = login['result']
-    users = call('user.get', {'output': ['userid'], 'filter': {'username': 'Admin'}}, token)['result']
-    result = call('user.update', {'userid': users[0]['userid'], 'passwd': settings['password']}, token)
-    if 'error' in result:
-        raise ValueError('Password update failed')
-    call('user.logout', [], token)
+    if not token:
+        raise ValueError('Missing authentication token')
+    try:
+        users = call('user.get', {'output': ['userid'], 'filter': {'username': 'Admin'}}, token)['result']
+        if len(users) != 1 or not users[0].get('userid'):
+            raise ValueError('Expected exactly one administrator')
+        result = call('user.update', {'userid': users[0]['userid'], 'passwd': settings['password']}, token)
+        if 'error' in result or 'result' not in result:
+            raise ValueError('Password update failed')
+    finally:
+        call('user.logout', [], token)
     return True
 
 

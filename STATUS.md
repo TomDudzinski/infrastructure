@@ -349,8 +349,12 @@ Ubuntu 26.04 wymaga potwierdzonego repozytorium oraz checksum override.
 Przygotowano kod `zabbix01` na `dom` (Ubuntu 24.04, 2 vCPU, 4 GiB RAM,
 40 GiB dysku) oraz etapy Ansible: serwer/PostgreSQL, lokalny DNS/NPM,
 Agent 2 z PSK dla 15 hostów i rejestracja API z szablonami Linux/Proxmox.
-**Nie wdrożono i nie sprawdzono działania w infrastrukturze.** IP oraz VMID
-pozostają do zatwierdzenia; Terraform domyślnie nie tworzy tej VM.
+**Nie wdrożono i nie sprawdzono działania w infrastrukturze.** Docelowy IP: `192.168.55.29`; VMID
+pozostaje do zatwierdzenia; Terraform domyślnie nie tworzy tej VM.
 Planowany panel: `http://zabbix.home.lab` przez `npm01`, tylko LAN.
 Obsługa Ubuntu 26.04, wersje pakietów i zgodność API DNS/NPM wymagają
 potwierdzenia na iza. Procedura i parametry: [Zabbix](docs/monitoring/zabbix-deployment.md).
+
+Przegląd lokalny Zabbix: przypięto serwer do 7.0.31 LTS dla Ubuntu 24.04,
+repozytorium z SHA256 oraz poprawiono konfigurację Nginx/PHP-FPM i testy offline.
+PostgreSQL lokalny; frontend przez NPM, wyłącznie LAN. Bez wdrożenia i weryfikacji runtime.

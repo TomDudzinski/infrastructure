@@ -155,6 +155,31 @@ class DeploymentTests(unittest.TestCase):
             self.assertFalse(bootstrap.main(settings))
             self.assertEqual(len(writes), 1)
 
+    def test_bootstrap_rejects_ambiguous_admin_and_api_errors(self):
+        for users, update in [([], {'result': {}}),
+                              ([{'userid': '1'}, {'userid': '2'}], {'result': {}}),
+                              ([{'userid': '1'}], {'error': {}})]:
+            calls = []
+            def fake(request, timeout):
+                body = __import__('json').loads(request.data)
+                method = body['method']
+                calls.append(method)
+                if method == 'user.login':
+                    result = {'error': {}} if len(calls) == 1 else {'result': 'session'}
+                elif method == 'user.get':
+                    result = {'result': users}
+                elif method == 'user.update':
+                    result = update
+                else:
+                    result = {'result': True}
+                return io.BytesIO(__import__('json').dumps(result).encode())
+            with self.subTest(users=users, update=update), patch.object(bootstrap, 'urlopen', fake):
+                with self.assertRaises(ValueError):
+                    bootstrap.main({'password': 'test-only-password' * 2, 'allow_initial_password': True})
+                self.assertEqual(calls[-1], 'user.logout')
+                if len(users) != 1:
+                    self.assertNotIn('user.update', calls)
+
     def test_all_fifteen_hosts_repeat_without_duplicate_hosts(self):
         api = FakeZabbix()
         names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
