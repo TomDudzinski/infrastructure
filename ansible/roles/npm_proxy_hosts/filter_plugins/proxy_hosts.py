@@ -69,7 +69,10 @@ def npm_proxy_hosts_compare(services, snapshot):
                 raise ValueError('Invalid catalogue IP')
             ipaddress.ip_address(service['ip'])
         port = service.get('port')
-        if port is not None and (type(port) is not int or not 1 <= port <= 65535):
+        # Ansible may wrap integers in metadata-carrying subclasses; bool is
+        # also an int subclass, but must never be accepted as a port.
+        if port is not None and (isinstance(port, bool) or not isinstance(port, int)
+                                 or not 1 <= port <= 65535):
             raise ValueError('Invalid catalogue port')
         if 'websocket' in service and type(service['websocket']) is not bool:
             raise ValueError('Invalid catalogue websocket flag')

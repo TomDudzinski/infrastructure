@@ -74,6 +74,14 @@ Grafana remains outside catalogue management and appears as unmanaged.
 
 ## Local tests
 
+Catalogue ports accept integers and metadata-carrying integer subclasses passed
+by Ansible to Python filters. Exact `type(port) is int` checks reject these
+subclasses even when Ansible's `type_debug` reports `int`. Booleans, strings
+(including numeric strings), floats and ports outside 1–65535 remain invalid;
+an absent or null port retains its existing unspecified-endpoint meaning.
+Regression tests reproduce this behavior with an integer subclass offline and
+verify unchanged comparison results and strict validation at the range limits.
+
 `tests/fixtures/npm/proxy_hosts.json` is synthetic data, not an infrastructure
 export. It includes a multi-domain Forgejo proxy, a Zabbix route with the existing
 role's marker/ACL, and an unmanaged Grafana route. Tests mutate copies to exercise

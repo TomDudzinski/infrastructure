@@ -118,6 +118,34 @@ class ProxyHostsTests(unittest.TestCase):
         self.assertEqual(report['snapshot_visibility']['completeness'], 'unverified')
         self.assertTrue(all(row['reason'] == 'no_visible_proxy_host' for row in report['missing']))
 
+    def test_catalogue_integer_subclasses_preserve_comparison(self):
+        # Ansible can pass metadata-carrying int subclasses to Python filters,
+        # even when type_debug reports int. No Ansible dependency is required.
+        class TaggedInt(int):
+            pass
+
+        expected = self.compare()
+        for service in self.services.values():
+            if service.get('port') is not None:
+                service['port'] = TaggedInt(service['port'])
+        self.assertEqual(self.compare(), expected)
+
+    def test_catalogue_port_validation_remains_strict(self):
+        class TaggedInt(int):
+            pass
+
+        for port in (1, 65535, TaggedInt(1), TaggedInt(65535)):
+            with self.subTest(valid_port=port):
+                self.services['forgejo']['port'] = port
+                self.compare()
+        for port in (0, -1, 65536, TaggedInt(0), TaggedInt(-1),
+                     TaggedInt(65536), True, False, '3000', '', 'invalid',
+                     '3000.0', 3000.0, [], {}):
+            with self.subTest(invalid_port=port):
+                self.services['forgejo']['port'] = port
+                with self.assertRaisesRegex(ValueError, '^Invalid catalogue port$'):
+                    self.compare()
+
     def test_owner_filtered_snapshot_does_not_claim_completeness(self):
         self.hosts = self.hosts[:1]
         report = self.compare()
