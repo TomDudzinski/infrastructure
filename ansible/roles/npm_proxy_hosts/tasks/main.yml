@@ -1,0 +1,20 @@
+---
+- name: Read explicitly requested API snapshot
+  ansible.builtin.include_tasks: read.yml
+  when: npm_proxy_hosts_read_api | bool
+
+- name: Require catalogue and explicit offline snapshot
+  ansible.builtin.assert:
+    that:
+      - infrastructure_services is defined
+      - npm_proxy_hosts_snapshot is not none
+    fail_msg: Supply infrastructure_services and an explicit offline NPM snapshot.
+
+- name: Compare catalogue on the controller without host or API operations
+  ansible.builtin.set_fact:
+    npm_proxy_hosts_report: "{{ infrastructure_services | npm_proxy_hosts_compare(npm_proxy_hosts_snapshot) }}"
+  changed_when: false
+
+- name: Show observational comparison report
+  ansible.builtin.debug:
+    var: npm_proxy_hosts_report

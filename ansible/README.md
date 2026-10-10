@@ -1,5 +1,68 @@
 # Ansible
 
+## NPM proxy comparison and GET adapter — prepared locally
+
+The `npm_proxy_hosts` role compares `infrastructure_services` with an explicitly
+supplied snapshot, reporting `matching`, `missing`, `conflict` and `unmanaged`.
+Offline comparison remains the default. A separate opt-in GET adapter and
+`playbooks/npm-proxy-hosts-read.yml` are prepared for local execution on iza;
+there are no write operations or changes to deployment playbooks. Disabled
+catalogue entries remain observational; Zabbix retains its existing owner.
+Contract, multi-domain handling, offline tests and the guarded read
+adapter: [role documentation](roles/npm_proxy_hosts/README.md).
+
+## Central service catalogue — stage 1 (offline only)
+
+`inventories/production/group_vars/all/services.yml` declares the passive
+`infrastructure_services` mapping. No role or playbook consumes it to configure
+DNS, NPM or services. All eleven entries start with `npm_enabled: false`.
+Grafana is excluded. Zabbix remains owned by the unchanged `zabbix_local_access`
+role; the validator rejects enabling its catalogue NPM entry. Disabling an entry
+here does not disable existing proxy routes or that independent role.
+
+Fields: `name`, inventory `host`, nullable `domain`, upstream `ip`, host `port`,
+nullable upstream `protocol` (`http`/`https`), `npm_enabled`, and repository `source`.
+Ports refer to web interfaces (NPM 81, Technitium 5380), not DNS or proxy ingress.
+Addresses come from inventory/host documentation; endpoint sources are recorded
+per entry. Historical configuration and defaults are evidence, not runtime checks.
+
+Unknown domains remain `null` for Homepage, NPM, Technitium, Open WebUI,
+VS Code and Jupyter. Homepage's historical allowed names do not establish its
+canonical domain. Upstream protocols remain `null` for Homepage, Open WebUI,
+VS Code and Jupyter: published ports alone do not prove HTTP/TLS. Jupyter's
+8888 is the Compose default; the effective `JUPYTER_PORT` remains unverified.
+Zabbix's endpoint is prepared configuration, not evidence of deployment.
+
+The file uses JSON syntax, a valid YAML subset supported by Ansible, so local
+validation requires only Python's standard library and no package installation.
+Keep this syntax when editing. From the repository root:
+
+```bash
+python3 scripts/validate_services.py
+python3 -m unittest discover -s tests -p 'test_services_catalogue.py' -v
+```
+
+Validation checks structure, duplicate keys, domain uniqueness (case/trailing-dot
+insensitive), IP literals, integer ports 1–65535, upstream protocols and boolean
+NPM flags, and optional boolean `websocket`. Existing entries without `websocket`
+remain valid. Unknown endpoint fields are allowed only for disabled entries;
+activation requires complete data and a separately reviewed integration change.
+These checks perform no network access or infrastructure execution.
+
+### Proxmox VE panels — user-supplied correction (2026-10-10)
+
+The catalogue records `dom` at `192.168.55.3:8006` (`https`,
+`pve-dom.home.lab`) and `dtcode` at `192.168.55.6:8006` (`https`,
+`pve-dtcode.home.lab`). Both have `npm_enabled: false` and `websocket: true`.
+The administrator reports direct SSH confirmation of these names and addresses.
+This supersedes the earlier incorrect `tdcode` entry and reversed IP mapping;
+no `tdcode` panel remains in the catalogue.
+
+The catalogue now agrees with `production/hosts.yml`. Inventory, Terraform,
+Zabbix and the other service entries were not changed. Validation and tests
+were performed offline only; Codex made no infrastructure connections and
+applied no proxy configuration.
+
 ## Purpose
 
 Ansible manages operating-system and service configuration for infrastructure hosts and guests.

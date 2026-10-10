@@ -1,0 +1,20 @@
+---
+- name: Read and compare NPM Proxy Hosts from iza only
+  hosts: iza
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    npm_proxy_hosts_read_api: true
+  pre_tasks:
+    - name: Require trusted execution host and explicit scope
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+          - ansible_limit | default('') == 'iza'
+          - npm_proxy_hosts_read_api | bool
+          - not ansible_check_mode
+        fail_msg: Run on iza with --limit iza; check mode makes no API requests.
+      delegate_to: localhost
+  roles:
+    - npm_proxy_hosts

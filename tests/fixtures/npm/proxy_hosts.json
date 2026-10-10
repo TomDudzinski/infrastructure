@@ -1,0 +1,32 @@
+[
+  {
+    "id": 10,
+    "domain_names": ["git.home.lab", "forgejo-alias.home.lab"],
+    "forward_scheme": "http",
+    "forward_host": "192.168.55.22",
+    "forward_port": 3000,
+    "enabled": true,
+    "allow_websocket_upgrade": false
+  },
+  {
+    "id": 20,
+    "domain_names": ["zabbix.home.lab"],
+    "forward_scheme": "http",
+    "forward_host": "192.168.55.29",
+    "forward_port": 8080,
+    "enabled": true,
+    "allow_websocket_upgrade": false,
+    "certificate_id": 0,
+    "ssl_forced": false,
+    "advanced_config": "# Managed by infrastructure: zabbix.home.lab\nallow 192.168.55.0/24;\ndeny all;\n"
+  },
+  {
+    "id": 30,
+    "domain_names": ["grafana.tdcode.pl"],
+    "forward_scheme": "http",
+    "forward_host": "192.168.55.27",
+    "forward_port": 3000,
+    "enabled": true,
+    "allow_websocket_upgrade": true
+  }
+]

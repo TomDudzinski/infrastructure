@@ -358,3 +358,45 @@ potwierdzenia na iza. Procedura i parametry: [Zabbix](docs/monitoring/zabbix-dep
 Przegląd lokalny Zabbix: przypięto serwer do 7.0.31 LTS dla Ubuntu 24.04,
 repozytorium z SHA256 oraz poprawiono konfigurację Nginx/PHP-FPM i testy offline.
 PostgreSQL lokalny; frontend przez NPM, wyłącznie LAN. Bez wdrożenia i weryfikacji runtime.
+
+## Centralny katalog usług Ansible — etap 1 (2026-10-10)
+
+Dodano pasywny katalog dziewięciu usług w
+`ansible/inventories/production/group_vars/all/services.yml`: Homepage, NPM,
+Technitium DNS, Open WebUI, VS Code, Jupyter, Forgejo, OpenBao i Zabbix.
+Wszystkie wpisy mają `npm_enabled: false`; Grafana pozostaje poza katalogiem.
+Nie zmieniono hostów, adresów ani działających usług. Nieznane domeny i protokoły
+zapisano jako `null`. Zabbix pozostaje w zakresie istniejącej, niezmienionej roli
+`zabbix_local_access`; katalog nie steruje jej wykonaniem ani istniejącymi trasami.
+Wykonano wyłącznie walidację i testy offline, bez wdrożenia.
+Źródła danych, niejasności i komendy testów: [dokumentacja Ansible](ansible/README.md#central-service-catalogue--stage-1-offline-only).
+
+## Porównywanie Proxy Hostów NPM — etap 1 (2026-10-10)
+
+Przygotowano rolę `npm_proxy_hosts`, porównującą centralny katalog z jawnie
+przekazaną listą Proxy Hostów. Raportuje `matching`, `missing`, `conflict`
+i `unmanaged`, obsługuje hosty wielodomenowe i nie interpretuje
+`npm_enabled: false` jako usunięcia lub wyłączenia trasy. Zabbix zachowuje
+właściciela `zabbix_local_access`; tej roli nie zmieniono.
+Brak klienta API, operacji zapisu i przypisania roli do playbooków wdrożeniowych.
+Dane NPM są wyłącznie przykładowymi danymi testowymi. Testy offline: 15 nowych
+oraz 12 testów katalogu przeszło; katalog 11 usług poprawny. Nie wykonywano
+Ansible ani kontroli składni przez `ansible-playbook` (niedostępny lokalnie).
+Bez połączeń z infrastrukturą i bez wdrożenia.
+[Kontrakt i późniejszy adapter odczytu](ansible/roles/npm_proxy_hosts/README.md).
+
+## Odczyt Proxy Hostów NPM — przygotowanie lokalne (2026-10-10)
+
+Rozszerzono `npm_proxy_hosts` o opcjonalny adapter GET i osobny playbook
+`npm-proxy-hosts-read.yml` do lokalnego wykonania na iza. Tryb offline pozostaje
+domyślny. Wcześniej wydany token pochodzi z Ansible Vault; zadania z tokenem
+lub odpowiedzią mają `no_log`. Brak logowania, odświeżania tokenów i operacji
+zapisu. Błędy zatrzymują wykonanie, bez zastępowania odpowiedzi pustą listą.
+Kontrakt zainstalowanej wersji NPM, widoczność całej listy i paginacja wymagają
+weryfikacji na iza; brak potwierdzenia blokuje odczyt. HTTPS wymaga poprawnego
+certyfikatu, HTTP jest dopuszczone tylko do loopback (np. tunel SSH).
+Bez połączeń z NPM, wdrożenia i zmian w `zabbix_local_access`.
+Testy lokalne: 28 testów porównania/adaptera oraz 12 testów katalogu przeszło;
+walidacja 11 usług poprawna. Ansible nie uruchamiano; `ansible-playbook`
+pozostaje niedostępny lokalnie.
+[Instrukcja pierwszego odczytu](ansible/roles/npm_proxy_hosts/README.md#first-safe-run--on-iza-only-not-performed-here).

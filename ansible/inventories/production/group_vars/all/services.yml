@@ -1,0 +1,116 @@
+{
+  "infrastructure_services": {
+    "homepage": {
+      "name": "Homepage",
+      "host": "home01",
+      "domain": null,
+      "ip": "192.168.55.20",
+      "port": 3000,
+      "protocol": null,
+      "npm_enabled": false,
+      "source": "docs/vms/home01.md"
+    },
+    "npm": {
+      "name": "Nginx Proxy Manager",
+      "host": "npm01",
+      "domain": null,
+      "ip": "192.168.55.23",
+      "port": 81,
+      "protocol": "http",
+      "npm_enabled": false,
+      "source": "ansible/roles/zabbix_local_access/files/access.py"
+    },
+    "technitium_dns": {
+      "name": "Technitium DNS",
+      "host": "dns01",
+      "domain": null,
+      "ip": "192.168.55.10",
+      "port": 5380,
+      "protocol": "http",
+      "npm_enabled": false,
+      "source": "ansible/roles/zabbix_local_access/files/access.py"
+    },
+    "open_webui": {
+      "name": "Open WebUI",
+      "host": "iza",
+      "domain": null,
+      "ip": "192.168.55.7",
+      "port": 3000,
+      "protocol": null,
+      "npm_enabled": false,
+      "source": "compose/open-webui/compose.yaml"
+    },
+    "vscode": {
+      "name": "VS Code (code-server)",
+      "host": "iza",
+      "domain": null,
+      "ip": "192.168.55.7",
+      "port": 8443,
+      "protocol": null,
+      "npm_enabled": false,
+      "source": "compose/code-server/compose.yaml"
+    },
+    "jupyter": {
+      "name": "JupyterLab",
+      "host": "iza",
+      "domain": null,
+      "ip": "192.168.55.7",
+      "port": 8888,
+      "protocol": null,
+      "npm_enabled": false,
+      "source": "compose/jupyter/compose.yaml"
+    },
+    "forgejo": {
+      "name": "Forgejo",
+      "host": "forgejo01",
+      "domain": "git.home.lab",
+      "ip": "192.168.55.22",
+      "port": 3000,
+      "protocol": "http",
+      "npm_enabled": false,
+      "source": "docs/vms/forgejo01.md"
+    },
+    "openbao": {
+      "name": "OpenBao",
+      "host": "bao01",
+      "domain": "bao01.home.lab",
+      "ip": "192.168.55.24",
+      "port": 8200,
+      "protocol": "https",
+      "npm_enabled": false,
+      "source": "ansible/roles/openbao/templates/openbao.hcl.j2"
+    },
+    "zabbix": {
+      "name": "Zabbix",
+      "host": "zabbix01",
+      "domain": "zabbix.home.lab",
+      "ip": "192.168.55.29",
+      "port": 8080,
+      "protocol": "http",
+      "npm_enabled": false,
+      "source": "ansible/roles/zabbix_local_access/files/access.py"
+    },
+    "dom": {
+      "name": "Proxmox VE (dom)",
+      "host": "dom",
+      "domain": "pve-dom.home.lab",
+      "ip": "192.168.55.3",
+      "port": 8006,
+      "protocol": "https",
+      "npm_enabled": false,
+      "websocket": true,
+      "source": "ansible/README.md"
+    },
+    "dtcode": {
+      "name": "Proxmox VE (dtcode)",
+      "host": "dtcode",
+      "domain": "pve-dtcode.home.lab",
+      "ip": "192.168.55.6",
+      "port": 8006,
+      "protocol": "https",
+      "npm_enabled": false,
+      "websocket": true,
+      "source": "ansible/README.md"
+    }
+  }
+}

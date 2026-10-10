@@ -1,0 +1,32 @@
+---
+- name: Require iza controller, local iza target and verified API contract
+  ansible.builtin.assert:
+    that:
+      - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+      - inventory_hostname == 'iza'
+      - ansible_connection | default('') == 'local'
+      - npm_proxy_hosts_api_contract_verified | bool
+      - npm_proxy_hosts_api_url | length > 0
+      - vault_npm_proxy_hosts_read_token is defined
+      - vault_npm_proxy_hosts_read_token | default('') | length > 0
+      - not ansible_check_mode
+    fail_msg: API reading requires local iza execution, verified settings and a Vault bearer token; check mode performs no read.
+  no_log: true
+
+- name: Fetch token-visible Proxy Host list with GET only
+  npm_proxy_hosts_read:
+    url: "{{ npm_proxy_hosts_api_url }}"
+    token: "{{ vault_npm_proxy_hosts_read_token }}"
+    timeout: "{{ npm_proxy_hosts_api_timeout }}"
+    contract_verified: "{{ npm_proxy_hosts_api_contract_verified }}"
+  register: npm_proxy_hosts_api_result
+  no_log: true
+  diff: false
+  changed_when: false
+
+- name: Replace snapshot only after a successful validated read
+  ansible.builtin.set_fact:
+    npm_proxy_hosts_snapshot: "{{ npm_proxy_hosts_api_result.snapshot }}"
+    npm_proxy_hosts_api_result: {}
+  no_log: true
+  changed_when: false

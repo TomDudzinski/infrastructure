@@ -1,0 +1,7 @@
+---
+# Offline is the default. API reads require a separately verified contract.
+npm_proxy_hosts_snapshot: null
+npm_proxy_hosts_read_api: false
+npm_proxy_hosts_api_contract_verified: false
+npm_proxy_hosts_api_url: ""
+npm_proxy_hosts_api_timeout: 30
