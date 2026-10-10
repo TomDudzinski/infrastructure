@@ -220,3 +220,12 @@ ansible-inventory -i inventories/production/hosts.yml --graph
 ansible-playbook playbooks/infrastructure-inventory.yml --syntax-check
 ansible-playbook playbooks/infrastructure-inventory.yml --list-hosts --limit 'dom'
 ```
+
+## Zabbix Agent 2 — kod przygotowany
+
+Grupa `zabbix_agents` obejmuje 14 hostów. Wspólne ustawienia SSH to użytkownik
+`tom` i istniejący klucz automatyzacji; `dns01`, `dom`, `dtcode` zachowują `root`.
+To aktualizuje wcześniejszy opis wpisów IP-only: ustawienia są teraz jawne,
+lecz dostęp do wcześniej niezweryfikowanych hostów nadal wymaga sprawdzenia na `iza`.
+Rola i playbook nie zostały wdrożone. Parametry, ograniczenia systemów, TLS, Vault,
+testy offline i komendy wdrożenia: [procedura](../docs/monitoring/zabbix-agents.md).

@@ -1,0 +1,20 @@
+---
+- name: Configure Zabbix Agent 2 on explicitly selected Linux hosts
+  hosts: zabbix_agents
+  gather_facts: false
+  become: "{{ ansible_user | default('tom') != 'root' }}"
+  become_method: sudo
+  pre_tasks:
+    - name: Require execution from iza and explicit scope before gathering facts
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+          - ansible_limit | default('') | length > 0
+        fail_msg: Run only on iza with an explicit --limit (also in check mode).
+      delegate_to: localhost
+      become: false
+      run_once: true
+    - name: Gather operating system facts
+      ansible.builtin.setup:
+  roles:
+    - zabbix_agent

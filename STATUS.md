@@ -326,3 +326,20 @@ Remaining reported differences concern VM destroy-behavior defaults, VGA for all
 This laptop review confirms local definitions only. State membership, plan results, prior live hardware verification and backup completion are administrator-reported evidence, not operations performed or independently repeated here. None of the five hosts has current Ansible inventory, host_vars, playbooks or assigned roles. Adoption does not establish service deployment, runtime health or application restore capability.
 
 See [detailed review](docs/operations/dtcode-adoption-2026-10-04.md).
+
+## Inventory automation preparation — 2026-10-10
+
+Added `dom` and `dtcode` to the Ansible `proxmox_hosts` group and prepared a
+separate temporary-collector playbook supporting explicit limits and partial
+reports on `iza`. Existing service roles are unchanged. Offline collector/report
+tests pass; Ansible syntax validation was unavailable on the development laptop.
+No remote connections, runtime collection, service changes or deployments were
+performed. See [procedure](docs/infrastructure/README.md#integracja-z-ansible).
+
+## Zabbix Agent 2 — 2026-10-10
+
+Przygotowano rolę `zabbix_agent`, playbook `zabbix-agents.yml` i grupę 14 hostów.
+Wyłącznie praca lokalna; brak instalacji, połączeń i weryfikacji infrastruktury.
+Przed wdrożeniem wymagane są parametry serwera, dokładne wersje pakietów i TLS;
+Ubuntu 26.04 wymaga potwierdzonego repozytorium oraz checksum override.
+[Procedura i testy](docs/monitoring/zabbix-agents.md).

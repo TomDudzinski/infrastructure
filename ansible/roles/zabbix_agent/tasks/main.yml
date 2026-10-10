@@ -1,0 +1,114 @@
+---
+- name: Validate platform and required parameters
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution in zabbix_agent_supported_releases
+      - zabbix_agent_server | length > 0
+      - zabbix_agent_server_active | length > 0
+      - zabbix_agent_hostname | length > 0
+      - zabbix_agent_package_version | length > 0
+      - zabbix_agent_release is match('^[0-9]+\.[0-9]+$')
+      - zabbix_agent_tls_connect in ['unencrypted', 'psk', 'cert']
+      - zabbix_agent_tls_accept in ['unencrypted', 'psk', 'cert']
+    fail_msg: Set the server, exact package version and supported TLS settings.
+
+- name: Select native distribution release (Proxmox uses Debian facts)
+  ansible.builtin.set_fact:
+    zabbix_agent_os_version: "{{ ansible_distribution_major_version if ansible_distribution == 'Debian' else ansible_distribution_version }}"
+
+- name: Reject unsupported repositories and configuration injection
+  ansible.builtin.assert:
+    that:
+      - zabbix_agent_os_version in zabbix_agent_supported_releases[ansible_distribution] or (zabbix_agent_repository_deb_url | length > 0 and zabbix_agent_repository_deb_checksum | length > 0)
+      - item.splitlines() | length <= 1
+    fail_msg: Unsupported OS needs a reviewed repository URL and checksum; values must be single-line.
+  loop:
+    - "{{ zabbix_agent_server }}"
+    - "{{ zabbix_agent_server_active }}"
+    - "{{ zabbix_agent_hostname }}"
+    - "{{ zabbix_agent_tls_psk_identity }}"
+    - "{{ zabbix_agent_tls_ca_file }}"
+    - "{{ zabbix_agent_tls_cert_file }}"
+    - "{{ zabbix_agent_tls_key_file }}"
+
+- name: Validate PSK configuration
+  ansible.builtin.assert:
+    that:
+      - zabbix_agent_tls_psk is match('^(?:[0-9a-fA-F]{2}){16,256}$')
+      - zabbix_agent_tls_psk_identity | length > 0
+    fail_msg: Supply a hexadecimal PSK through Ansible Vault.
+  when: "'psk' in [zabbix_agent_tls_connect, zabbix_agent_tls_accept]"
+  no_log: true
+
+- name: Validate certificate paths
+  ansible.builtin.assert:
+    that:
+      - zabbix_agent_tls_ca_file.startswith('/')
+      - zabbix_agent_tls_cert_file.startswith('/')
+      - zabbix_agent_tls_key_file.startswith('/')
+    fail_msg: Provision CA, certificate and readable private key separately; supply absolute paths.
+  when: "'cert' in [zabbix_agent_tls_connect, zabbix_agent_tls_accept]"
+
+- name: Download official release repository package
+  ansible.builtin.get_url:
+    url: "{{ zabbix_agent_repository_deb_url or ('https://repo.zabbix.com/zabbix/' + zabbix_agent_release + '/release/' + (ansible_distribution | lower) + '/pool/main/z/zabbix-release/zabbix-release_latest_' + zabbix_agent_release + '+' + (ansible_distribution | lower) + zabbix_agent_os_version + '_all.deb') }}"
+    dest: /var/tmp/zabbix-agent-release.deb
+    checksum: "{{ zabbix_agent_repository_deb_checksum or omit }}"
+    mode: '0644'
+  when: not ansible_check_mode
+
+- name: Install Zabbix repository definition
+  ansible.builtin.apt:
+    deb: /var/tmp/zabbix-agent-release.deb
+  register: zabbix_agent_repository_install
+  when: not ansible_check_mode
+
+- name: Install explicitly versioned Agent 2
+  ansible.builtin.apt:
+    name: "zabbix-agent2={{ zabbix_agent_package_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ 0 if zabbix_agent_repository_install.changed else 3600 }}"
+    allow_downgrade: false
+  notify: Restart Zabbix Agent 2
+  when: not ansible_check_mode
+
+- name: Inspect installed packages for offline-safe check mode
+  ansible.builtin.package_facts:
+    manager: apt
+
+- name: Explain initial-install check mode limitation
+  ansible.builtin.debug:
+    msg: Check mode skips repository downloads and package installation; configuration can be checked only when Agent 2 is already installed.
+  when: ansible_check_mode
+
+- name: Configure installed Agent 2
+  when: "'zabbix-agent2' in ansible_facts.packages"
+  block:
+    - name: Write private PSK file
+      ansible.builtin.copy:
+        content: "{{ zabbix_agent_tls_psk }}\n"
+        dest: /etc/zabbix/agent2.psk
+        owner: root
+        group: zabbix
+        mode: '0640'
+      when: "'psk' in [zabbix_agent_tls_connect, zabbix_agent_tls_accept]"
+      no_log: true
+      diff: false
+      notify: Restart Zabbix Agent 2
+
+    - name: Manage Agent 2 configuration only
+      ansible.builtin.template:
+        src: zabbix_agent2.conf.j2
+        dest: /etc/zabbix/zabbix_agent2.conf
+        owner: root
+        group: zabbix
+        mode: '0640'
+        backup: true
+      notify: Restart Zabbix Agent 2
+
+    - name: Enable and start Agent 2
+      ansible.builtin.service:
+        name: zabbix-agent2
+        enabled: true
+        state: started

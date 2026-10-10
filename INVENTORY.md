@@ -235,3 +235,20 @@ The following information still requires live verification:
 - DNS verification for `mysql01.home.lab`
 - review remaining provider/state differences for the five adopted `dtcode` guests; separately assess any other import
 - complete inventory of existing secrets that still require controlled migration into OpenBao
+
+## Ansible inventory collection preparation — 2026-10-10
+
+The `proxmox_hosts` group now records `dom` (`192.168.55.3`) and `dtcode`
+(`192.168.55.6`) with the requested root automation-key access settings.
+A separate [collection playbook](ansible/playbooks/infrastructure-inventory.yml)
+can collect partial observations from `iza` using an explicit `--limit`.
+This is a local code change only; connectivity and execution remain unverified.
+
+## Zabbix Agent 2 — przygotowanie 2026-10-10
+
+Grupa Ansible `zabbix_agents`: `dom`, `dtcode`, `iza`, `dns01`, `home01`,
+`forgejo01`, `npm01`, `tailscale-router`, `mysql01`, `bao01`, `qdrant01`,
+`langfuse01`, `grafana01`, `cloudflare01`. Zakres aktywnych hostów zgodny z zadaniem
+administratora, bez bieżącej weryfikacji stanu. Rola i playbook przygotowane;
+agent nie został zainstalowany w ramach tej zmiany. Adresy i identyfikatory bez zmian.
+[Konfiguracja i procedura](docs/monitoring/zabbix-agents.md).

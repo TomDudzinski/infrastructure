@@ -1,0 +1,18 @@
+# Managed by Ansible: zabbix_agent
+PidFile=/run/zabbix/zabbix_agent2.pid
+LogType=system
+Server={{ zabbix_agent_server }}
+ServerActive={{ zabbix_agent_server_active }}
+Hostname={{ zabbix_agent_hostname }}
+TLSConnect={{ zabbix_agent_tls_connect }}
+TLSAccept={{ zabbix_agent_tls_accept }}
+{% if 'psk' in [zabbix_agent_tls_connect, zabbix_agent_tls_accept] %}
+TLSPSKIdentity={{ zabbix_agent_tls_psk_identity }}
+TLSPSKFile=/etc/zabbix/agent2.psk
+{% endif %}
+{% if 'cert' in [zabbix_agent_tls_connect, zabbix_agent_tls_accept] %}
+TLSCAFile={{ zabbix_agent_tls_ca_file }}
+TLSCertFile={{ zabbix_agent_tls_cert_file }}
+TLSKeyFile={{ zabbix_agent_tls_key_file }}
+{% endif %}
+Include=/etc/zabbix/zabbix_agent2.d/*.conf
