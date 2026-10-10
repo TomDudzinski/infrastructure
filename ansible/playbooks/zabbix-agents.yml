@@ -5,6 +5,7 @@
   become: "{{ ansible_user | default('tom') != 'root' }}"
   become_method: sudo
   pre_tasks:
+    - ansible.builtin.import_tasks: ../tasks/zabbix-controller-guard.yml
     - name: Require execution from iza and explicit scope before gathering facts
       ansible.builtin.assert:
         that:

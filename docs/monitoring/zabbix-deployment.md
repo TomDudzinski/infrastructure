@@ -1,0 +1,244 @@
+# Zabbix w homelabie — kod przygotowany, bez wdrożenia
+
+Zmiany wykonano wyłącznie lokalnie. Nie sprawdzono łączności, dostępności pakietów,
+wersji działających API ani rzeczywistej idempotencji na serwerach. Poniższe polecenia
+wdrożeniowe wykonuje administrator **wyłącznie na iza, po zatwierdzeniu**.
+Tryb Ansible `--check` również łączy się z hostami; nie jest testem offline.
+
+## Projekt i zakres
+
+Terraform dodaje `zabbix01` na `dom`: Ubuntu 24.04 z istniejącego cloud image,
+2 vCPU, 4096 MiB RAM, 40 GiB `local-lvm`, `vmbr0`, QEMU Guest Agent, użytkownik
+`tom`, istniejące klucze SSH. IP i VMID nie mają domyślnych wartości. VM jest
+wyłączona z konfiguracji (`zabbix_enabled=false`) do zatwierdzenia parametrów.
+Nie zmieniono definicji istniejących VM, backendu ani stanu Terraform.
+
+Zabbix 7.0 LTS, PostgreSQL, PHP 8.3/FPM i nginx działają na jednej nowej VM.
+Schema jest importowana transakcyjnie wyłącznie do pustej bazy; istniejąca baza
+bez tabeli `dbversion` powoduje błąd, nie automatyczną naprawę. Hasło bazy ustawiane
+jest przy tworzeniu użytkownika; ponowne wykonanie nie zmienia go. Celowa rotacja
+wymaga `zabbix_rotate_db_password=true` wraz z nowym hasłem w Vault.
+Nie stosuj tej roli do istniejącego, obcego serwera Zabbix ani do zmiany gałęzi LTS.
+
+Frontend na 8080 przyjmuje ruch tylko z `npm01` i loopback. Technitium dostaje
+jeden rekord A `zabbix.home.lab -> 192.168.55.23`; NPM jedną trasę HTTP na nową VM,
+z `allow 192.168.55.0/24; deny all;`, bez certyfikatu publicznego. Nie są tworzone
+rekordy publiczne, integracje Cloudflare, przekierowania portów ani nowe strefy DNS.
+Zabbix nasłuchuje na adresie LAN na 10051; agenci akceptują wyłącznie serwer i PSK.
+Zachowaj istniejącą izolację LAN, brak DNAT oraz brak publicznego dostępu do NPM
+i PostgreSQL. Zweryfikuj na iza rzeczywistą konfigurację wygenerowaną przez NPM:
+ACL musi obowiązywać także w `location /`, bez nadrzędnego `allow all` w include.
+Przed publikacją sprawdź odmowę dostępu spoza LAN (także IPv6); jeśli NPM danej
+wersji nadpisuje ACL, nie publikuj trasy, dopasuj integrację po przeglądzie.
+
+Rola `zabbix_agent` pozostaje istniejącą implementacją. Grupa ma 15 hostów:
+`dom`, `dtcode`, `iza`, `dns01`, `home01`, `forgejo01`, `npm01`, `tailscale-router`,
+`mysql01`, `bao01`, `qdrant01`, `langfuse01`, `grafana01`, `cloudflare01`, `zabbix01`.
+Wszyscy używają indywidualnych PSK i szablonu `Linux by Zabbix agent active`.
+Proxmox dodatkowo otrzymuje `Proxmox VE by HTTP` oraz istniejące lub osobno
+zatwierdzone tokeny **tylko do odczytu**, z uprawnieniami potrzebnymi temu szablonowi.
+Nie używaj tokenów zarządzających Terraform. Nie twórz tokenów na laptopie.
+
+Rejestrator sprawdza makra szablonu Proxmox przed zmianami. Zachowuje dodatkowe
+szablony, grupy i tagi. Obcy host bez `managed-by=infrastructure-zabbix` oraz obca
+trasa NPM powodują odmowę przejęcia. Nie usuwa hostów i nie czyści całych grup/stref.
+Fingerprint sekretów pozwala rozpoznać rotację bez odczytywania ich z API;
+nie wykrywa ręcznej zmiany sekretu w Zabbix przy pozostawieniu fingerprintu.
+Po takiej zmianie usuń tag `credentials-sha256` z zarządzanego hosta i ponów etap.
+Hasła/tokeny trafiają do skryptów przez stdin, zadania mają `no_log`, sekrety nie
+są zapisywane w argumentach ani w diff. DNS/NPM i Zabbix API używają loopback
+na odpowiednich hostach. Dostęp WWW przez HTTP nie szyfruje logowania w LAN.
+
+## Parametry do zatwierdzenia i przygotowania
+
+- Wolny IP w `192.168.55.0/24` i wolny VMID na `dom`; potwierdź brak kolizji także
+  z zasobami spoza Terraform. Nowa VM wymaga 40 GiB wolnego miejsca.
+- Dokładne wersje pakietów Zabbix 7.0 dla serwera i każdej dystrybucji agentów.
+  URL i SHA256 oficjalnego pakietu repozytorium serwera.
+- Ubuntu 26.04 na `iza`: oficjalne natywne repozytorium Agent 2 i SHA256 są wymagane
+  jako override istniejącej roli. Brak potwierdzonej obsługi blokuje wdrożenie na iza;
+  nie podstawiaj repozytorium 24.04. Nie deklaruj ukończenia wszystkich 15 hostów
+  przy pominięciu iza. Analogicznie sprawdź bazową wersję Debiana na Proxmox.
+- Kontrakty API zainstalowanych Technitium i NPM: endpointy użyte w `access.py`,
+  odpowiedzi `zone.type=Primary`, `records[].rData.ipAddress`, pola proxy hostów,
+  lokalne porty 5380 i 81, Python 3 oraz skuteczne ACL. Wersje usług nie były
+  odczytywane; wymagana jest jawna zgoda `zabbix_local_api_compatibility_approved`.
+- Dostęp SSH/sudo, hasła Vault, indywidualne PSK, hasło Admin i bazy, token DNS,
+  konto NPM oraz tokeny monitorujące Proxmox. Bootstrap domyślnego konta Admin
+  wymaga `zabbix_initial_admin_bootstrap_approved=true`; zabezpiecza hasło przed
+  publikacją panelu. Zabbix API rejestracji loguje się tym kontem i wylogowuje sesję.
+  Konto Admin jest używane tylko w tym etapie; tokeny nie są utrwalane w plikach.
+
+## Pliki prywatne na iza
+
+Nie wpisuj sekretów do repozytorium. Użyj istniejącej metody i identyfikatora
+Ansible Vault. `host_vars/langfuse01/vault.yml` pozostaje nietknięty. Pełny zakres
+agentów i rejestracja mogą wymagać także odszyfrowania istniejącego Vault Langfuse;
+przekaż jego istniejący `--vault-id` zamiast przenosić sekrety do grupy `all`.
+Nie wyświetlaj `ansible-inventory --list` z odszyfrowanymi sekretami.
+
+```bash
+# Tylko na iza. Zachowaj istniejący sposób przechowywania haseł Vault.
+umask 077
+mkdir -p /home/tom/.config/infrastructure/zabbix
+ansible-vault create /home/tom/.config/infrastructure/zabbix/vault.yml
+```
+
+W zaszyfrowanym pliku przygotuj następujące klucze (wartości generuj lokalnie,
+np. `openssl rand -hex 32`; nie wklejaj ich do czatu ani Git):
+
+```yaml
+vault_zabbix_db_password: <32-or-more-alphanumeric-characters>
+vault_zabbix_admin_password: <unique-random-password-at-least-32-characters>
+vault_zabbix_dns_token: <scoped-Technitium-token>
+vault_zabbix_npm_identity: <NPM-account>
+vault_zabbix_npm_password: <NPM-password>
+vault_zabbix_psks:
+  dom: <unique-64-hex-characters>
+  # Dodaj osobny klucz dla każdego z pozostałych 14 hostów.
+vault_zabbix_proxmox_tokens:
+  dom:
+    id: <user@realm!readonly-token>
+    secret: <token-secret>
+  dtcode:
+    id: <user@realm!readonly-token>
+    secret: <token-secret>
+```
+
+Prywatny `/home/tom/.config/infrastructure/zabbix/settings.yml` zawiera parametry
+zatwierdzone przez administratora; wszystkie placeholdery zastąp przed użyciem:
+
+```yaml
+zabbix_deployment_approved: true
+zabbix_server_ip: <APPROVED_IP>
+zabbix_initial_admin_bootstrap_approved: true
+zabbix_local_api_compatibility_approved: true
+zabbix_server_package_version: <EXACT_APT_VERSION_WITH_EPOCH>
+zabbix_repository_url: <OFFICIAL_7.0_UBUNTU_24.04_RELEASE_DEB_URL>
+zabbix_repository_checksum: sha256:<64_HEX>
+zabbix_agent_package_version: "{{ zabbix_agent_versions[inventory_hostname] }}"
+zabbix_agent_versions:
+  dom: <EXACT_APT_VERSION>
+  # Uzupełnij wszystkie 15 hostów, z uwzględnieniem ich dystrybucji.
+zabbix_agent_repository_deb_url: "{{ zabbix_agent_repositories.get(inventory_hostname, {}).get('url', '') }}"
+zabbix_agent_repository_deb_checksum: "{{ zabbix_agent_repositories.get(inventory_hostname, {}).get('checksum', '') }}"
+zabbix_agent_repositories:
+  iza:
+    url: <OFFICIAL_7.0_UBUNTU_26.04_RELEASE_DEB_URL>
+    checksum: sha256:<64_HEX>
+```
+
+Prywatny `zabbix.tfvars` w tym samym katalogu:
+
+```hcl
+zabbix_enabled = true
+zabbix_vmid    = <APPROVED_VMID>
+zabbix_ip      = "<APPROVED_IP>"
+```
+
+## Testy offline na laptopie lub iza
+
+```bash
+python3 -B -m unittest discover -s tests -p 'test_zabbix*.py' -v
+terraform -chdir=terraform fmt -check dom_zabbix01.tf
+# validate wymaga już lokalnie zainstalowanych providerów; nie wykonuj init na laptopie.
+terraform -chdir=terraform validate
+cd ansible
+ansible-playbook playbooks/zabbix-server.yml --syntax-check
+ansible-playbook playbooks/zabbix-local-access.yml --syntax-check
+ansible-playbook playbooks/zabbix-agents.yml --syntax-check
+ansible-playbook playbooks/zabbix-register.yml --syntax-check
+```
+
+Testy Python korzystają z atrap HTTP i nie łączą się z siecią. Sprawdzają tworzenie,
+ponowne wykonanie, rotację PSK, zachowanie dodatkowych grup/szablonów/tagów,
+odmowę przejęcia hostów i tras oraz idempotencję DNS/NPM. Parsowanie YAML i
+renderowanie Jinja wymagają lokalnych PyYAML/Jinja2; brak powoduje pominięcie.
+Nie instalowano zależności z sieci. Testy nie potwierdzają zgodności rzeczywistych API.
+
+## Etapy wdrożenia — wyłącznie na iza po przeglądzie
+
+Przed wykonaniem wykonaj kopię konfiguracji istniejących agentów i DNS/NPM,
+sprawdź klucze SSH oraz sudo. Na iza (`/opt/ai/projects/infrastructure`) zainstaluj
+zatwierdzone zależności kolekcji zgodnie z procedurą projektu:
+
+```bash
+cd /opt/ai/projects/infrastructure/ansible
+ansible-galaxy collection install -r requirements.yml
+```
+
+### 1. VM
+
+Załaduj istniejącą procedurą tokeny Proxmox na iza. Nie kopiuj ich do repozytorium.
+Wyłączony domyślnie zasób wymaga zachowania zatwierdzonego `-var-file` **w każdym
+późniejszym plan/apply**, inaczej Terraform zaproponuje usunięcie VM (ochrona
+Proxmox nie zastępuje przeglądu planu). Docelowo włącz wartości w prywatnej
+konfiguracji stosowanej przez administratora do wszystkich operacji Terraform.
+
+```bash
+cd /opt/ai/projects/infrastructure
+terraform -chdir=terraform plan \
+  -var-file=/home/tom/.config/infrastructure/zabbix/zabbix.tfvars \
+  -target='proxmox_virtual_environment_vm.zabbix01[0]' \
+  -out=/home/tom/.config/infrastructure/zabbix/vm.plan
+terraform -chdir=terraform show /home/tom/.config/infrastructure/zabbix/vm.plan
+# Dopiero po zatwierdzeniu zapisanego planu:
+terraform -chdir=terraform apply /home/tom/.config/infrastructure/zabbix/vm.plan
+```
+
+Celowanie to jednorazowy etap nowej VM, z zależnościami cloud image. Plan musi
+zawierać wyłącznie nową VM i ewentualnie zatwierdzone zależności; żadnej zmiany
+istniejących VM. Jeśli wspólny obraz wymaga zmian lub provider proponuje inne
+operacje, zatrzymaj się. Nie używaj import/state mv/rm. Po etapie przejrzyj pełny
+plan bez `-target` (z tym samym var-file), bez automatycznego zastosowania.
+
+### 2–5. Serwer → DNS/NPM → agenci → rejestracja
+
+Polecenia zakładają jedno istniejące hasło Vault (`--ask-vault-pass`). Jeśli Langfuse
+korzysta z osobnego identyfikatora, zastosuj istniejące `--vault-id ...` dla obu
+plików. Pliki prywatne pozostają na iza. Nie uruchamiaj z `--diff` dla sekretów.
+
+```bash
+cd /opt/ai/projects/infrastructure/ansible
+ansible-playbook playbooks/zabbix-server.yml --limit zabbix01 \
+  --ask-become-pass --ask-vault-pass \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+ansible-playbook playbooks/zabbix-local-access.yml --limit dns01,npm01 \
+  --ask-become-pass --ask-vault-pass \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+# Najpierw jeden host pilotażowy:
+ansible-playbook playbooks/zabbix-agents.yml --limit zabbix01 \
+  --ask-become-pass --ask-vault-pass \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+# Dopiero po weryfikacji pilota i potwierdzeniu obsługi Ubuntu 26.04:
+ansible-playbook playbooks/zabbix-agents.yml --limit zabbix_agents \
+  --ask-become-pass --ask-vault-pass \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
+  --ask-become-pass --ask-vault-pass \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+```
+
+Serwer i integracje API wymagają realnego wykonania; `--check` nie symuluje pełnej
+instalacji ani zapisów API. Dla agentów pozostaje opisana wcześniej ograniczona
+obsługa check mode. Po wdrożeniu powtórz cztery etapy Ansible z tymi samymi
+parametrami: konfiguracja, schema i rejestracja nie powinny wykazywać zmian.
+Sprawdź z iza: `getent hosts zabbix.home.lab`, `curl -I http://zabbix.home.lab`,
+15 hostów w panelu, dane aktywnych agentów, PSK, metryki Proxmox i odmowę dostępu
+spoza LAN. Zweryfikuj `nginx -t`, stan usług i logi na nowej VM oraz ACL NPM.
+Zapisz rzeczywiste wyniki w STATUS/INVENTORY dopiero po wykonaniu. Kopia bazy,
+konfiguracji i zaszyfrowanych sekretów jest warunkiem odtwarzania; nie kasuj bazy
+ani VM w celu ponowienia playbooków. Nie dodano harmonogramu backupu Zabbix.
+
+## Wynik lokalnej kontroli (2026-10-10)
+
+`python3 -B -m unittest discover -s tests -v`: 26 testów, 24 zaliczone,
+2 pominięte (brak PyYAML/Jinja2). `git diff --check`: bez błędów.
+Terraform oraz Ansible nie są dostępne w lokalnym środowisku, więc nie wykonano
+`fmt`, `validate` ani `--syntax-check`; pozostają wymaganymi kontrolami przed
+wdrożeniem. Nie wykonano połączeń do usług, plan/apply ani playbooków na hostach.

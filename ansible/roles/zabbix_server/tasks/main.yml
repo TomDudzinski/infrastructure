@@ -1,0 +1,170 @@
+---
+- name: Validate server platform and pinned packages
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version == '24.04'
+      - zabbix_server_package_version is match('^([0-9]+:)?7\.0\.')
+      - zabbix_repository_url is match('^https://repo\.zabbix\.com/zabbix/7\.0/')
+      - zabbix_repository_checksum is match('^sha256:[0-9a-f]{64}$')
+      - vault_zabbix_admin_password | length >= 32
+      - zabbix_db_name == 'zabbix'
+      - zabbix_db_user == 'zabbix'
+      - vault_zabbix_db_password is match('^[A-Za-z0-9]{32,128}$')
+    fail_msg: Require Ubuntu 24.04, approved Zabbix 7.0 package/repository and Vault password.
+  no_log: true
+
+- name: Download pinned official repository
+  ansible.builtin.get_url:
+    url: "{{ zabbix_repository_url }}"
+    checksum: "{{ zabbix_repository_checksum }}"
+    dest: /var/tmp/zabbix-server-release.deb
+    mode: '0644'
+
+- name: Install repository
+  ansible.builtin.apt:
+    deb: /var/tmp/zabbix-server-release.deb
+
+- name: Install server, frontend and database
+  ansible.builtin.apt:
+    name:
+      - "zabbix-server-pgsql={{ zabbix_server_package_version }}"
+      - "zabbix-frontend-php={{ zabbix_server_package_version }}"
+      - "zabbix-sql-scripts={{ zabbix_server_package_version }}"
+      - postgresql
+      - acl
+      - python3-psycopg2
+      - nginx
+      - php8.3-fpm
+      - php8.3-pgsql
+      - php8.3-gd
+      - php8.3-bcmath
+      - php8.3-mbstring
+      - php8.3-xml
+      - php8.3-ldap
+      - php8.3-curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  notify: Restart Zabbix server
+
+- name: Start local database
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Configure database account
+  community.postgresql.postgresql_user:
+    name: "{{ zabbix_db_user }}"
+    password: "{{ vault_zabbix_db_password }}"
+    no_password_changes: "{{ not (zabbix_rotate_db_password | default(false) | bool) }}"
+  become_user: postgres
+  no_log: true
+
+- name: Create owned database
+  community.postgresql.postgresql_db:
+    name: "{{ zabbix_db_name }}"
+    owner: "{{ zabbix_db_user }}"
+  become_user: postgres
+
+- name: Discover schema path from the installed package
+  ansible.builtin.command: dpkg -L zabbix-sql-scripts
+  register: zabbix_sql_files
+  changed_when: false
+
+- name: Require one PostgreSQL schema
+  ansible.builtin.assert:
+    that:
+      - zabbix_sql_files.stdout_lines | select('search', '/postgresql/server.sql.gz$') | list | length == 1
+
+- name: Import schema atomically only into an empty database
+  ansible.builtin.shell: |
+    set -eu
+    tables=$(psql -d zabbix -Atc "SELECT count(*) FROM pg_tables WHERE schemaname='public'")
+    if [ "$tables" = 0 ]; then
+      schema_tmp=$(mktemp)
+      trap 'rm -f "$schema_tmp"' EXIT
+      gzip -dc {{ (zabbix_sql_files.stdout_lines | select('search', '/postgresql/server.sql.gz$') | first) | quote }} > "$schema_tmp"
+      PGOPTIONS='-c role=zabbix' psql -d zabbix --single-transaction -v ON_ERROR_STOP=1 -f "$schema_tmp" >/dev/null
+      echo SCHEMA_IMPORTED
+    else
+      psql -d zabbix -Atc 'SELECT mandatory FROM dbversion' >/dev/null
+    fi
+  args:
+    executable: /bin/bash
+  become_user: postgres
+  register: zabbix_schema
+  changed_when: "'SCHEMA_IMPORTED' in zabbix_schema.stdout"
+
+- name: Configure Zabbix server
+  ansible.builtin.template:
+    src: zabbix_server.conf.j2
+    dest: /etc/zabbix/zabbix_server.conf
+    owner: root
+    group: zabbix
+    mode: '0640'
+  no_log: true
+  diff: false
+  notify: Restart Zabbix server
+
+- name: Configure unattended frontend
+  ansible.builtin.template:
+    src: zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: root
+    group: www-data
+    mode: '0640'
+  no_log: true
+  diff: false
+
+- name: Configure PHP limits
+  ansible.builtin.copy:
+    dest: /etc/php/8.3/fpm/conf.d/99-zabbix.ini
+    mode: '0644'
+    content: |
+      date.timezone = {{ zabbix_php_timezone }}
+      max_execution_time = 300
+      max_input_time = 300
+      memory_limit = 128M
+      post_max_size = 16M
+  notify: Restart PHP
+
+- name: Restrict frontend to NPM and local API client
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-enabled/zabbix.conf
+    mode: '0644'
+  notify: Reload nginx
+
+- name: Enable services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: [zabbix-server, php8.3-fpm, nginx, qemu-guest-agent]
+
+- name: Apply server configuration before password bootstrap
+  ansible.builtin.meta: flush_handlers
+
+- name: Install initial administrator bootstrap helper
+  ansible.builtin.copy:
+    src: bootstrap_admin.py
+    dest: /usr/local/lib/zabbix-bootstrap-admin.py
+    mode: '0700'
+
+- name: Wait for frontend listener
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 8080
+    timeout: 60
+
+- name: Secure the initial administrator before publishing DNS and NPM
+  ansible.builtin.command:
+    argv: [python3, /usr/local/lib/zabbix-bootstrap-admin.py]
+    stdin: "{{ {'password': vault_zabbix_admin_password, 'allow_initial_password': zabbix_initial_admin_bootstrap_approved | default(false) | bool} | to_json }}"
+  register: zabbix_admin_result
+  changed_when: (zabbix_admin_result.stdout | from_json).changed
+  no_log: true
+  diff: false
+  when: not ansible_check_mode

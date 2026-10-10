@@ -1,8 +1,8 @@
 # Zabbix Agent 2 — przygotowanie do wdrożenia
 
 Kod przygotowany lokalnie; niczego nie zainstalowano ani nie zweryfikowano na hostach.
-Ansible uruchamia administrator wyłącznie na `iza`. Terraform nie jest zmieniany.
-Grupa `zabbix_agents` obejmuje 14 hostów wskazanych w zadaniu; nie zawiera
+Ansible uruchamia administrator wyłącznie na `iza`. Pełna automatyzacja nowej VM i serwera: [procedura Zabbix](zabbix-deployment.md).
+Grupa `zabbix_agents` obejmuje 14 istniejących hostów oraz planowany `zabbix01`; nie zawiera
 zatrzymanych VM ani szablonów. Root: `dom`, `dtcode`, `dns01`; pozostali: `tom`.
 Wspólny klucz `/home/tom/.ssh/homelab_automation_ed25519` musi istnieć na `iza`.
 `iza` zachowuje połączenie lokalne i istniejące ustawienia `sudo.ws`.
@@ -15,6 +15,8 @@ Przed uruchomieniem ustaw w `group_vars/zabbix_agents.yml` lub odpowiednich
 `host_vars` (wartości zależne od systemu), albo w prywatnym pliku `-e @...`:
 
 ```yaml
+zabbix_deployment_approved: true
+zabbix_server_ip: "APPROVED_ZABBIX_SERVER_IP"
 zabbix_agent_release: "7.0"
 zabbix_agent_package_version: "EXACT_APT_VERSION"
 zabbix_agent_server: "ZABBIX_SERVER_ADDRESS"
@@ -55,7 +57,8 @@ Rola zarządza pakietem, repozytorium i głównym plikiem konfiguracyjnym Agent 
 Przed wdrożeniem sprawdź istniejącą konfigurację agenta i konflikty dyrektyw we
 fragmentach, zajęcie portu 10050 przez starszy agent oraz wersję serwera Zabbix.
 Restart Agent 2 następuje przy zmianie pakietu, konfiguracji lub PSK.
-Rejestracja hostów w Zabbix, firewall i serwer Zabbix pozostają poza zakresem.
+Rejestrację API i instalację serwera opisuje [procedura Zabbix](zabbix-deployment.md).
+Istniejące firewalle pozostają poza zarządzaniem rolą agenta.
 
 ## Testy lokalne — bez połączeń z hostami
 

@@ -343,3 +343,14 @@ Wyłącznie praca lokalna; brak instalacji, połączeń i weryfikacji infrastruk
 Przed wdrożeniem wymagane są parametry serwera, dokładne wersje pakietów i TLS;
 Ubuntu 26.04 wymaga potwierdzonego repozytorium oraz checksum override.
 [Procedura i testy](docs/monitoring/zabbix-agents.md).
+
+## Zabbix — przygotowanie lokalne (2026-10-10)
+
+Przygotowano kod `zabbix01` na `dom` (Ubuntu 24.04, 2 vCPU, 4 GiB RAM,
+40 GiB dysku) oraz etapy Ansible: serwer/PostgreSQL, lokalny DNS/NPM,
+Agent 2 z PSK dla 15 hostów i rejestracja API z szablonami Linux/Proxmox.
+**Nie wdrożono i nie sprawdzono działania w infrastrukturze.** IP oraz VMID
+pozostają do zatwierdzenia; Terraform domyślnie nie tworzy tej VM.
+Planowany panel: `http://zabbix.home.lab` przez `npm01`, tylko LAN.
+Obsługa Ubuntu 26.04, wersje pakietów i zgodność API DNS/NPM wymagają
+potwierdzenia na iza. Procedura i parametry: [Zabbix](docs/monitoring/zabbix-deployment.md).

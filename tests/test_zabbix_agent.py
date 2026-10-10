@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROLE = ROOT / 'ansible/roles/zabbix_agent'
 EXPECTED = {'dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
             'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
-            'grafana01', 'cloudflare01'}
+            'grafana01', 'cloudflare01', 'zabbix01'}
 
 
 class ZabbixOfflineTests(unittest.TestCase):

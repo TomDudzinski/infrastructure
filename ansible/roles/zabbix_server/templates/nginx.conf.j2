@@ -1,0 +1,18 @@
+server {
+    listen 8080;
+    server_name zabbix.home.lab;
+    root /usr/share/zabbix;
+    index index.php;
+    allow 127.0.0.1;
+    allow 192.168.55.23;
+    deny all;
+    location / { try_files $uri $uri/ =404; }
+    location ~ /\. { deny all; }
+    location ~ ^/(conf|include|vendor|local)/ { deny all; }
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_param HTTP_AUTHORIZATION $http_authorization;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+}

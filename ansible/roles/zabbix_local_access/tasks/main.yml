@@ -1,0 +1,23 @@
+---
+- name: Require approved installed API compatibility
+  ansible.builtin.assert:
+    that:
+      - zabbix_local_api_compatibility_approved | default(false) | bool
+      - inventory_hostname in ['dns01', 'npm01']
+    fail_msg: Verify installed Technitium/NPM API contracts on iza before approving integration.
+
+- name: Install narrow integration helper
+  ansible.builtin.copy:
+    src: access.py
+    dest: /usr/local/lib/zabbix-local-access.py
+    mode: '0700'
+
+- name: Reconcile local DNS or proxy route using loopback only
+  ansible.builtin.command:
+    argv: [python3, /usr/local/lib/zabbix-local-access.py]
+    stdin: "{{ ({'action': 'dns', 'token': vault_zabbix_dns_token} if inventory_hostname == 'dns01' else {'action': 'npm', 'identity': vault_zabbix_npm_identity, 'password': vault_zabbix_npm_password, 'server_ip': zabbix_server_ip}) | to_json }}"
+  register: zabbix_local_access_result
+  changed_when: (zabbix_local_access_result.stdout | from_json).changed
+  no_log: true
+  diff: false
+  when: not ansible_check_mode

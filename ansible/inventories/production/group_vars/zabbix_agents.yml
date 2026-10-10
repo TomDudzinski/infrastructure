@@ -1,0 +1,7 @@
+---
+zabbix_agent_server: "{{ zabbix_server_ip }}"
+zabbix_agent_server_active: "{{ zabbix_server_ip }}:10051"
+zabbix_agent_tls_connect: psk
+zabbix_agent_tls_accept: psk
+zabbix_agent_tls_psk_identity: "homelab-{{ inventory_hostname }}"
+zabbix_agent_tls_psk: "{{ vault_zabbix_psks[inventory_hostname] }}"

@@ -1,0 +1,26 @@
+---
+- name: Reset transient host registration data for repeated role execution
+  ansible.builtin.set_fact:
+    zabbix_registration_hosts: []
+
+- name: Build host registration data using the existing inventory
+  ansible.builtin.set_fact:
+    zabbix_registration_hosts: "{{ zabbix_registration_hosts | default([]) + [{'name': item, 'ip': ('192.168.55.7' if item == 'iza' else hostvars[item].ansible_host), 'psk': vault_zabbix_psks[item]}] }}"
+  loop: "{{ groups['zabbix_agents'] }}"
+  no_log: true
+
+- name: Install API reconciler
+  ansible.builtin.copy:
+    src: register.py
+    dest: /usr/local/lib/zabbix-register.py
+    mode: '0700'
+
+- name: Reconcile hosts with PSK and stock templates via loopback API
+  ansible.builtin.command:
+    argv: [python3, /usr/local/lib/zabbix-register.py]
+    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': vault_zabbix_proxmox_tokens} | to_json }}"
+  register: zabbix_registration_result
+  changed_when: (zabbix_registration_result.stdout | from_json).changed
+  no_log: true
+  diff: false
+  when: not ansible_check_mode

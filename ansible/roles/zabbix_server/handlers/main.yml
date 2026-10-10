@@ -1,0 +1,17 @@
+---
+- name: Restart Zabbix server
+  ansible.builtin.service:
+    name: zabbix-server
+    state: restarted
+- name: Restart PHP
+  ansible.builtin.service:
+    name: php8.3-fpm
+    state: restarted
+- name: Reload nginx
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  notify: Apply nginx configuration
+- name: Apply nginx configuration
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded

@@ -1,0 +1,12 @@
+---
+- name: Install the approved Zabbix server from iza
+  hosts: zabbix_servers
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - ansible.builtin.import_tasks: ../tasks/zabbix-controller-guard.yml
+    - name: Gather server facts after controller guard
+      ansible.builtin.setup:
+  roles:
+    - qemu_guest_agent
+    - zabbix_server

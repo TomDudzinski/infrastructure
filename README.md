@@ -255,3 +255,5 @@ Start with:
 - [Host documentation](docs/hosts/)
 - [Backup documentation](docs/backup/)
 - [Security and secrets](docs/security/SECRETS.md)
+
+Zabbix: [lokalnie przygotowana automatyzacja i wdrożenie etapami na iza](docs/monitoring/zabbix-deployment.md) — bez wdrożenia; IP/VMID wymagają zatwierdzenia.

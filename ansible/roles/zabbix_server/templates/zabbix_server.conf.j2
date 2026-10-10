@@ -1,0 +1,9 @@
+# Managed by Ansible
+LogType=system
+DBHost=127.0.0.1
+DBName={{ zabbix_db_name }}
+DBUser={{ zabbix_db_user }}
+DBPassword={{ vault_zabbix_db_password }}
+ListenIP={{ zabbix_server_ip }}
+ListenPort=10051
+Timeout=10

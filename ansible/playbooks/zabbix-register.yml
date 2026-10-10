@@ -1,0 +1,9 @@
+---
+- name: Register all managed hosts using local Zabbix API
+  hosts: zabbix_servers
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - ansible.builtin.import_tasks: ../tasks/zabbix-controller-guard.yml
+  roles:
+    - zabbix_registration

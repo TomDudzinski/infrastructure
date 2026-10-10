@@ -1,0 +1,11 @@
+<?php
+// Managed by Ansible. Password is constrained to alphanumeric characters.
+$DB['TYPE'] = 'POSTGRESQL';
+$DB['SERVER'] = '127.0.0.1';
+$DB['PORT'] = '5432';
+$DB['DATABASE'] = '{{ zabbix_db_name }}';
+$DB['USER'] = '{{ zabbix_db_user }}';
+$DB['PASSWORD'] = '{{ vault_zabbix_db_password }}';
+$ZBX_SERVER = '{{ zabbix_server_ip }}';
+$ZBX_SERVER_PORT = '10051';
+$ZBX_SERVER_NAME = 'Homelab';

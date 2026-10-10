@@ -1,0 +1,9 @@
+---
+- name: Configure only the local Zabbix DNS record and proxy host
+  hosts: dns01:npm01
+  gather_facts: false
+  become: "{{ ansible_user | default('tom') != 'root' }}"
+  pre_tasks:
+    - ansible.builtin.import_tasks: ../tasks/zabbix-controller-guard.yml
+  roles:
+    - zabbix_local_access
