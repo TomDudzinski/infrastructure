@@ -161,6 +161,36 @@ zabbix_ip      = "192.168.55.29"
 
 ## Testy offline na laptopie lub iza
 
+### Bezpieczna diagnostyka bootstrapu Admin
+
+`bootstrap_admin.py` zwraca na stdout JSON z `changed`, `failed` i `warnings`.
+Przy błędzie dodaje `stage` i stały `code`; nie wypisuje wyjątków, treści HTTP,
+żądań, odpowiedzi API, haseł ani tokenów. Etapy to `target_login`, `initial_login`,
+`user_read`, `password_update` i `logout` (oraz `input` dla błędnego wejścia).
+Kody obejmują `RPC_ERROR`, `MISSING_RESULT`, `HTTP_ERROR`, `TRANSPORT_ERROR`,
+`INVALID_JSON`, `INVALID_RESPONSE`, `INVALID_TOKEN`, `INVALID_ADMIN_RESULT`,
+`UPDATE_NOT_CONFIRMED` i `UNEXPECTED_ERROR`. `INITIAL_PASSWORD_NOT_APPROVED`
+oznacza odmowę użycia hasła początkowego po odrzuceniu logowania docelowego.
+`RPC_ERROR` celowo nie ujawnia komunikatu API ani nie przesądza o błędnym haśle.
+Tylko odrzucenie JSON-RPC logowania docelowego pozwala na zatwierdzoną próbę
+hasłem początkowym; błędy transportu i protokołu kończą bootstrap.
+
+Zmiana jest potwierdzana wyłącznie przez `result.userids` zgodne z odczytanym
+użytkownikiem. Działające hasło docelowe pomija aktualizację. Błąd wylogowania
+trafia do `warnings` i nie zmienia sukcesu w błąd ani nie przesłania pierwotnego
+błędu. Przy niepotwierdzonej aktualizacji wynik jest błędem; kolejne uruchomienie
+sprawdza hasło docelowe, więc może rozpoznać wcześniej wykonaną zmianę.
+
+Zadanie Ansible zachowuje `no_log: true` i `diff: false`; diagnostyka nadal jest
+ukryta w jego zwykłym wyniku. Proponowany sposób udostępnienia jej operatorowi:
+osobny blok `always` po zadaniu, emitujący wyłącznie pola `stage`, `code` oraz
+ostrzeżenia po sprawdzeniu ich względem zamkniętej listy wartości. Parsowanie
+zarejestrowanego stdout i budowa komunikatu muszą mieć `no_log: true`; publiczny
+`debug` powinien otrzymać wyłącznie zweryfikowany komunikat. Przy błędzie
+parsowania należy pokazać stałe `DIAGNOSTIC_UNAVAILABLE`, bez surowego wyniku.
+Nie wyświetlać całego `zabbix_admin_result`, `stdout`, `stderr` ani stdin.
+Ten dodatkowy przepływ Ansible jest propozycją; nie zmieniono zadania playbooka.
+
 Szablon serwera ustawia `PidFile=/run/zabbix/zabbix_server.pid`, zgodnie ze
 ścieżką `PIDFile` zgłoszonej jednostki systemd z `Type=forking`. Zapobiega to
 oczekiwaniu systemd na inny plik PID podczas zadania `Enable services`.
@@ -277,6 +307,13 @@ konfiguracji i zaszyfrowanych sekretów jest warunkiem odtwarzania; nie kasuj ba
 ani VM w celu ponowienia playbooków. Nie dodano harmonogramu backupu Zabbix.
 
 ## Wynik lokalnej kontroli (2026-10-10)
+
+Po poprawce diagnostyki bootstrapu: `python3 -B -m unittest discover -s tests -v`
+— 39 testów, 36 zaliczonych, 3 pominięte (brak PyYAML/Jinja2 i lokalnego `.deb`).
+Testy obejmują wszystkie etapy bootstrapu, błędy HTTP/transportu/JSON/JSON-RPC,
+brak wyniku, potwierdzanie aktualizacji, ponowne uruchomienie, błędy wylogowania
+i brak sekretów w diagnostyce. `git diff --check`: bez błędów.
+Nie wykonano połączeń z serwerem ani bazą, wdrożenia, commita ani push.
 
 Po poprawce PID pełny zestaw `python3 -B -m unittest discover -s tests -v`:
 32 testy, 29 zaliczonych, 3 pominięte (brak PyYAML/Jinja2 i lokalnego pakietu

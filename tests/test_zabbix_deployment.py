@@ -141,7 +141,7 @@ class DeploymentTests(unittest.TestCase):
             elif method == 'user.update':
                 state['password'] = params['passwd']
                 writes.append(method)
-                result = {'result': {}}
+                result = {'result': {'userids': ['1']}}
             else:
                 result = {'result': True}
             return io.BytesIO(__import__('json').dumps(result).encode())
