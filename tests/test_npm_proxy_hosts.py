@@ -38,7 +38,7 @@ class ProxyHostsTests(unittest.TestCase):
         self.assertEqual(zabbix['owner'], 'zabbix_local_access')
         self.assertEqual(zabbix['proxy_host_ids'], [20])
         self.assertEqual(report['conflict'], [])
-        self.assertEqual({row['service'] for row in report['missing']}, {'openbao', 'dom', 'dtcode'})
+        self.assertEqual({row['service'] for row in report['missing']}, set(self.services) - {'forgejo', 'zabbix'})
         self.assertIn({'proxy_host_id': 10, 'domains': ['forgejo-alias.home.lab'],
                        'reason': 'domains_outside_catalogue'}, report['unmanaged'])
         self.assertIn({'proxy_host_id': 30, 'domains': ['grafana.tdcode.pl'],
@@ -107,12 +107,13 @@ class ProxyHostsTests(unittest.TestCase):
     def test_incomplete_catalogue_does_not_claim_matching(self):
         self.services['forgejo']['protocol'] = None
         self.assertIn('incomplete_catalogue_endpoint', self.conflict('forgejo')['reasons'])
+        self.services['homepage']['domain'] = None
         self.assertIn('homepage', {row.get('service') for row in self.compare()['unmanaged']})
 
     def test_empty_snapshot_is_explicit_missing_not_deletion(self):
         self.hosts = []
         report = self.compare()
-        self.assertEqual(len(report['missing']), 5)
+        self.assertEqual({row['service'] for row in report['missing']}, set(self.services))
         self.assertEqual(report['matching'], [])
         self.assertNotIn('delete', json.dumps(report))
         self.assertEqual(report['snapshot_visibility']['completeness'], 'unverified')

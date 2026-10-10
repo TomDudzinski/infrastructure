@@ -26,9 +26,12 @@ Ports refer to web interfaces (NPM 81, Technitium 5380), not DNS or proxy ingres
 Addresses come from inventory/host documentation; endpoint sources are recorded
 per entry. Historical configuration and defaults are evidence, not runtime checks.
 
-Unknown domains remain `null` for Homepage, NPM, Technitium, Open WebUI,
-VS Code and Jupyter. Homepage's historical allowed names do not establish its
-canonical domain. Upstream protocols remain `null` for Homepage, Open WebUI,
+The administrator supplied domains confirmed by a prior NPM API read:
+Homepage `home.home.lab`, NPM `proxy.home.lab`, Technitium `dns.home.lab`,
+Open WebUI `chat.home.lab`, VS Code `vsc.home.lab`, Jupyter `jupyter.home.lab`.
+These catalogue updates were checked offline only; no API was contacted and no
+proxy configuration was applied. Existing endpoints, sources and `npm_enabled`
+flags are unchanged. Upstream protocols remain `null` for Homepage, Open WebUI,
 VS Code and Jupyter: published ports alone do not prove HTTP/TLS. Jupyter's
 8888 is the Compose default; the effective `JUPYTER_PORT` remains unverified.
 Zabbix's endpoint is prepared configuration, not evidence of deployment.

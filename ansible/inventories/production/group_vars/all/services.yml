@@ -3,7 +3,7 @@
     "homepage": {
       "name": "Homepage",
       "host": "home01",
-      "domain": null,
+      "domain": "home.home.lab",
       "ip": "192.168.55.20",
       "port": 3000,
       "protocol": null,
@@ -13,7 +13,7 @@
     "npm": {
       "name": "Nginx Proxy Manager",
       "host": "npm01",
-      "domain": null,
+      "domain": "proxy.home.lab",
       "ip": "192.168.55.23",
       "port": 81,
       "protocol": "http",
@@ -23,7 +23,7 @@
     "technitium_dns": {
       "name": "Technitium DNS",
       "host": "dns01",
-      "domain": null,
+      "domain": "dns.home.lab",
       "ip": "192.168.55.10",
       "port": 5380,
       "protocol": "http",
@@ -33,7 +33,7 @@
     "open_webui": {
       "name": "Open WebUI",
       "host": "iza",
-      "domain": null,
+      "domain": "chat.home.lab",
       "ip": "192.168.55.7",
       "port": 3000,
       "protocol": null,
@@ -43,7 +43,7 @@
     "vscode": {
       "name": "VS Code (code-server)",
       "host": "iza",
-      "domain": null,
+      "domain": "vsc.home.lab",
       "ip": "192.168.55.7",
       "port": 8443,
       "protocol": null,
@@ -53,7 +53,7 @@
     "jupyter": {
       "name": "JupyterLab",
       "host": "iza",
-      "domain": null,
+      "domain": "jupyter.home.lab",
       "ip": "192.168.55.7",
       "port": 8888,
       "protocol": null,

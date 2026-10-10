@@ -26,6 +26,25 @@ class CatalogueTests(unittest.TestCase):
         for service in self.services.values():
             self.assertTrue((ROOT / service['source']).is_file())
 
+    def test_user_confirmed_npm_domains(self):
+        expected = {
+            'homepage': 'home.home.lab',
+            'npm': 'proxy.home.lab',
+            'technitium_dns': 'dns.home.lab',
+            'open_webui': 'chat.home.lab',
+            'vscode': 'vsc.home.lab',
+            'jupyter': 'jupyter.home.lab',
+            'forgejo': 'git.home.lab',
+            'openbao': 'bao01.home.lab',
+            'zabbix': 'zabbix.home.lab',
+            'dom': 'pve-dom.home.lab',
+            'dtcode': 'pve-dtcode.home.lab',
+        }
+        self.assertEqual({key: service['domain'] for key, service in self.services.items()}, expected)
+        for key in ('homepage', 'open_webui', 'vscode', 'jupyter'):
+            with self.subTest(service=key):
+                self.assertIsNone(self.services[key]['protocol'])
+
     def test_duplicate_domains_case_and_trailing_dot(self):
         self.services['npm']['domain'] = 'GIT.HOME.LAB.'
         with self.assertRaisesRegex(ValueError, 'duplicate domain'):
