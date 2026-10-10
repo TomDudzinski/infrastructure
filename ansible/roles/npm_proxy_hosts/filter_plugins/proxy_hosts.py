@@ -55,6 +55,15 @@ def npm_proxy_hosts_compare(services, snapshot):
                           protocol=raw['forward_scheme'], ip=raw['forward_host'],
                           port=raw['forward_port'], enabled=raw['enabled'],
                           websocket=raw['allow_websocket_upgrade']))
+    # Expose only routing fields from the validated snapshot, without changing
+    # the normalized hosts used by the comparison below.
+    report['observed_endpoints'] = [
+        dict(proxy_host_id=raw['id'], domains=list(raw['domain_names']),
+             protocol=raw['forward_scheme'], host=raw['forward_host'],
+             port=raw['forward_port'], enabled=raw['enabled'],
+             websocket=raw['allow_websocket_upgrade'])
+        for raw in snapshot
+    ]
     catalogue = {}
     for key, service in services.items():
         if not isinstance(service, dict) or type(service.get('npm_enabled')) is not bool:

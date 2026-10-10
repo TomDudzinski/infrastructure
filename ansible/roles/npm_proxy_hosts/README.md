@@ -43,11 +43,22 @@ The adapter validates `certificate_id` (nonnegative integer) and `ssl_forced`
 (boolean) when present, then omits them from the routing snapshot. They are not
 required by the offline routing snapshot contract.
 
-`npm_proxy_hosts_report` contains `snapshot_visibility` metadata and four lists.
+`npm_proxy_hosts_report` contains `snapshot_visibility` metadata, four comparison
+lists and an `observed_endpoints` list.
 Completeness is always `unverified`: owner permissions may limit the provided
 snapshot, even with HTTP 200, an empty array or a matching `X-Total-Count`.
 `missing` means absent from the visible snapshot, not proven absent from NPM.
 Its reason is `no_visible_proxy_host`; no deletion or creation follows.
+
+`observed_endpoints` exposes every proxy in the provided snapshot, including
+disabled and unmanaged hosts, in snapshot order. Each entry contains only
+`proxy_host_id` (`id`), `domains` (`domain_names`), `protocol` (`forward_scheme`),
+`host` (`forward_host`), `port` (`forward_port`), `enabled` and `websocket`
+(`allow_websocket_upgrade`). Values retain their snapshot form, including domain
+case and trailing dots. This section can inform a manual review of missing
+catalogue protocols; it does not update the catalogue or NPM, change comparison
+rules, perform additional API requests or certify complete/current visibility.
+Credentials and other snapshot fields are omitted.
 
 
 | Status | Meaning |

@@ -31,7 +31,8 @@ class ProxyHostsTests(unittest.TestCase):
 
     def test_fixture_disabled_catalogue_and_external_zabbix(self):
         report = self.compare()
-        self.assertEqual(set(report), {'matching', 'missing', 'conflict', 'unmanaged', 'snapshot_visibility'})
+        self.assertEqual(set(report), {'matching', 'missing', 'conflict', 'unmanaged',
+                                      'snapshot_visibility', 'observed_endpoints'})
         self.assertEqual({row['service'] for row in report['matching']}, {'forgejo', 'zabbix'})
         self.assertTrue(all(row['npm_enabled'] is False for row in report['matching']))
         zabbix = next(row for row in report['matching'] if row['service'] == 'zabbix')
@@ -52,6 +53,33 @@ class ProxyHostsTests(unittest.TestCase):
         self.assertEqual((self.services, self.hosts), before)
         self.assertNotIn('test-secret', json.dumps(report))
         self.assertNotIn('advanced_config', json.dumps(report))
+
+    def test_observed_endpoints_include_every_host_and_only_routing_fields(self):
+        self.hosts[0].update(forward_scheme='https', enabled=False,
+                             domain_names=['GIT.HOME.LAB.', 'forgejo-alias.home.lab'])
+        self.hosts[2]['forward_host'] = 'backend.home.lab'
+        expected = [
+            dict(proxy_host_id=host['id'], domains=host['domain_names'],
+                 protocol=host['forward_scheme'], host=host['forward_host'],
+                 port=host['forward_port'], enabled=host['enabled'],
+                 websocket=host['allow_websocket_upgrade'])
+            for host in self.hosts
+        ]
+        self.assertEqual(self.compare()['observed_endpoints'], expected)
+
+    def test_observed_endpoints_do_not_depend_on_catalogue_comparison(self):
+        before = self.compare()['observed_endpoints']
+        self.services['forgejo']['protocol'] = None
+        self.services['zabbix']['port'] = 80
+        report = self.compare()
+        self.assertEqual(report['observed_endpoints'], before)
+        self.assertIn('incomplete_catalogue_endpoint', self.conflict('forgejo')['reasons'])
+        self.assertIn('port_mismatch', self.conflict('zabbix')['reasons'])
+
+    def test_observed_domains_are_not_shared_with_snapshot(self):
+        report = self.compare()
+        report['observed_endpoints'][0]['domains'].append('extra.home.lab')
+        self.assertNotIn('extra.home.lab', self.hosts[0]['domain_names'])
 
     def test_multi_domain_host_with_two_catalogue_services(self):
         self.services['alias'] = dict(self.services['forgejo'], domain='forgejo-alias.home.lab')
@@ -115,6 +143,7 @@ class ProxyHostsTests(unittest.TestCase):
         report = self.compare()
         self.assertEqual({row['service'] for row in report['missing']}, set(self.services))
         self.assertEqual(report['matching'], [])
+        self.assertEqual(report['observed_endpoints'], [])
         self.assertNotIn('delete', json.dumps(report))
         self.assertEqual(report['snapshot_visibility']['completeness'], 'unverified')
         self.assertTrue(all(row['reason'] == 'no_visible_proxy_host' for row in report['missing']))
