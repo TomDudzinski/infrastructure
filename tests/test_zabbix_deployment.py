@@ -33,7 +33,15 @@ class FakeZabbix:
                          {'host': 'Proxmox VE by HTTP', 'templateid': '11', 'macros': [{'macro': name} for name in ['{$PVE.URL.HOST}', '{$PVE.URL.PORT}', '{$PVE.TOKEN.ID}', '{$PVE.TOKEN.SECRET}']]}]
             return [t for t in templates if t['host'] in params['filter']['host']]
         if method == 'host.get':
-            return copy.deepcopy(self.hosts)
+            # Zabbix 7.0 never returns write-only PSK fields or secret macro values.
+            hosts = copy.deepcopy(self.hosts)
+            for h in hosts:
+                h.pop('tls_psk', None)
+                h.pop('tls_psk_identity', None)
+                for macro in h.get('macros', []):
+                    if str(macro.get('type')) == '1':
+                        macro.pop('value', None)
+            return hosts
         if method == 'hostgroup.get':
             return self.groups
         self.writes.append((method, copy.deepcopy(params)))
@@ -253,7 +261,7 @@ class DeploymentTests(unittest.TestCase):
                 return io.BytesIO(__import__('json').dumps(body).encode())
             raise registration.URLError('logout unavailable')
         message, warnings = self.run_main(fake, secret)
-        self.assertEqual(message, 'Registration failed: stage=reconcile operation=template.get '
+        self.assertEqual(message, 'Registration failed: stage=reconcile step=templates operation=template.get '
                                   'category=api_error exception=APIError code=-32602')
         self.assertEqual(calls[-1], 'user.logout')
         self.assertIn('stage=logout', warnings)
@@ -264,8 +272,19 @@ class DeploymentTests(unittest.TestCase):
         def fake(request, timeout):
             raise registration.URLError('connection refused')
         message, _ = self.run_main(fake, 'test-only-password')
-        self.assertEqual(message, 'Registration failed: stage=login operation=user.login '
+        self.assertEqual(message, 'Registration failed: stage=login step=none operation=user.login '
                                   'category=connection exception=URLError')
+
+    def test_missing_response_field_reports_key_and_step(self):
+        api = FakeZabbix()
+        hosts = [dict(name='zabbix01', ip='192.168.55.29', psk='ab' * 32)]
+        registration.reconcile(api, hosts, {})
+        del api.hosts[0]['parentTemplates']
+        with self.assertRaises(KeyError) as raised:
+            registration.reconcile(api, hosts, {})
+        self.assertEqual(registration.describe(raised.exception, 'reconcile', 'hostgroup.get'),
+                         'Registration failed: stage=reconcile step=compare:zabbix01 operation=hostgroup.get '
+                         'category=unexpected_response exception=KeyError key=parentTemplates')
 
     def test_all_new_python_sources_compile_without_execution(self):
         for directory in ['zabbix_server', 'zabbix_registration', 'zabbix_local_access']:

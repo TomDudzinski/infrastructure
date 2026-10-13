@@ -38,6 +38,9 @@ class API:
         return result['result']
 
 
+# Last reconcile step, reported on failure; contains only fixed names and host names.
+progress = {'step': 'none'}
+
 OWNER_TAG = {'tag': 'managed-by', 'value': 'infrastructure-zabbix'}
 
 
@@ -48,6 +51,7 @@ def plain_tags(tags):
 
 def reconcile(api, hosts, proxmox):
     # Read all prerequisites before the first mutation.
+    progress['step'] = 'templates'
     names = ['Linux by Zabbix agent active']
     if proxmox:
         names.append('Proxmox VE by HTTP')
@@ -60,7 +64,9 @@ def reconcile(api, hosts, proxmox):
         expected = {'{$PVE.URL.HOST}', '{$PVE.URL.PORT}', '{$PVE.TOKEN.ID}', '{$PVE.TOKEN.SECRET}'}
         if not expected <= {m['macro'] for m in pve_template['macros']}:
             raise CheckFailed('Installed Proxmox template macro contract differs')
-    current = api('host.get', {'output': ['hostid', 'host', 'tls_connect', 'tls_accept', 'tls_psk_identity'],
+    progress['step'] = 'hosts'
+    # tls_psk_identity and tls_psk are write-only in Zabbix 7.0 and never returned by host.get.
+    current = api('host.get', {'output': ['hostid', 'host', 'tls_connect', 'tls_accept'],
                               'filter': {'host': [h['name'] for h in hosts]},
                               'selectHostGroups': ['groupid'], 'selectParentTemplates': ['templateid'],
                               'selectInterfaces': ['interfaceid', 'type', 'main', 'useip', 'ip', 'dns', 'port'],
@@ -69,6 +75,7 @@ def reconcile(api, hosts, proxmox):
     for h in current:
         if OWNER_TAG not in plain_tags(h['tags']):
             raise CheckFailed('Existing unowned host needs explicit adoption: ' + h['host'])
+    progress['step'] = 'groups'
     group_names = ['Homelab/Linux', 'Homelab/Proxmox']
     groups = api('hostgroup.get', {'output': ['groupid', 'name'], 'filter': {'name': group_names}})
     group_ids = {g['name']: g['groupid'] for g in groups}
@@ -79,6 +86,7 @@ def reconcile(api, hosts, proxmox):
             changed = True
     for host in hosts:
         name, ip, psk = host['name'], host['ip'], host['psk']
+        progress['step'] = 'prepare:' + name
         old = existing.get(name)
         desired_groups = {group_ids['Homelab/Linux']}
         desired_templates = {ids['Linux by Zabbix agent active']}
@@ -105,6 +113,7 @@ def reconcile(api, hosts, proxmox):
             api('host.create', payload)
             changed = True
             continue
+        progress['step'] = 'compare:' + name
         old_groups = {g['groupid'] for g in old['hostgroups']}
         old_templates = {t['templateid'] for t in old['parentTemplates']}
         interfaces = [i for i in old['interfaces'] if str(i['type']) == '1' and str(i['main']) == '1']
@@ -114,11 +123,13 @@ def reconcile(api, hosts, proxmox):
         interface_changed = any(str(actual[k]) != str(v) for k, v in interface.items())
         old_tags = plain_tags(old['tags'])
         credentials_changed = tags[1] not in old_tags
-        macro_values = {m['macro']: m['value'] for m in old['macros']}
+        # Secret macro values are write-only and absent from host.get; they are never compared.
+        macro_values = {m['macro']: m.get('value') for m in old['macros']}
         macro_changed = any(m['macro'] not in macro_values or (m.get('type') != '1' and macro_values[m['macro']] != m['value']) for m in macros)
-        tls_changed = (str(old['tls_connect']) != '2' or str(old['tls_accept']) != '2'
-                       or old['tls_psk_identity'] != 'homelab-' + name)
+        # The PSK identity cannot be read back; host.update below always sends it with the PSK.
+        tls_changed = str(old['tls_connect']) != '2' or str(old['tls_accept']) != '2'
         if credentials_changed or macro_changed or tls_changed or not desired_groups <= old_groups or not desired_templates <= old_templates:
+            progress['step'] = 'update:' + name
             payload.pop('host')
             payload['hostid'] = old['hostid']
             payload['groups'] = [{'groupid': x} for x in sorted(old_groups | desired_groups)]
@@ -175,11 +186,17 @@ def describe(error, stage, method):
         category, detail = 'connection', ''
     elif isinstance(error, ValueError):
         category, detail = 'invalid_data', ''
-    elif isinstance(error, (KeyError, TypeError, IndexError, StopIteration)):
+    elif isinstance(error, KeyError):
+        key = error.args[0] if error.args else None
+        # Only report keys that look like field or host names, never arbitrary data.
+        safe = isinstance(key, str) and re.fullmatch(r'[A-Za-z0-9_.\-]{1,64}', key)
+        category, detail = 'unexpected_response', 'key=' + (key if safe else 'unreported')
+    elif isinstance(error, (TypeError, IndexError, StopIteration)):
         category, detail = 'unexpected_response', ''
     else:
         category, detail = 'internal', ''
-    parts = ['Registration failed:', 'stage=' + stage, 'operation=' + (method or 'none'),
+    parts = ['Registration failed:', 'stage=' + stage, 'step=' + progress['step'],
+             'operation=' + (method or 'none'),
              'category=' + category, 'exception=' + type(error).__name__]
     return ' '.join(parts + ([detail] if detail else []))
 
@@ -194,6 +211,7 @@ def logout(api):
 
 def main():
     stage, api = 'input', None
+    progress['step'] = 'none'
     try:
         settings = json.load(sys.stdin)
         stage = 'validate'
