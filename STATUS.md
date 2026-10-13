@@ -436,3 +436,17 @@ DNS-01 i Cloudflare Tunnel (tylko `^/webhook/`) są krokami ręcznymi
 Terraform/Ansible/Docker niedostępne lokalnie.
 **Nie wdrożono i nie zweryfikowano w infrastrukturze.**
 [Procedura](docs/vms/n8n01.md).
+
+## n8n01 — publiczny edytor `n8n.tdcode.pl` (2026-10-13)
+
+Według zgłoszenia operatora `n8n01` (VMID `208`, `192.168.55.31`) jest wdrożona:
+n8n `2.43.4`, PostgreSQL `17.11`, `/healthz` HTTP 200, webhooki przez
+`https://webhookn8n.tdcode.pl/`. Prywatny edytor `authn8n.tdcode.pl` zastąpiono
+publicznym `https://n8n.tdcode.pl/` (Cloudflare Tunnel, logowanie n8n, bez Cloudflare
+Access); callback OAuth2 `https://n8n.tdcode.pl/rest/oauth2-credential/callback`.
+`N8N_SECURE_COOKIE=true` ustawione jawnie; PostgreSQL, wolumeny, klucz szyfrowania
+i hasła bez zmian. Trasa tunelu `n8n.tdcode.pl` → `http://192.168.55.31:5678` i
+aktualizacja redirect URI u dostawców OAuth2 to kroki ręczne.
+Testy offline przeszły; Ansible niedostępne lokalnie.
+**Kod przygotowany, nie wdrożono i nie zweryfikowano w infrastrukturze.**
+[Procedura](docs/vms/n8n01.md).

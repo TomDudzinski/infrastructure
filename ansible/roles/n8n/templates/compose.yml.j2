@@ -27,7 +27,7 @@ services:
       postgres:
         condition: service_healthy
 
-    # LAN port for NPM (editor) and cloudflared (webhooks); no router port forwarding.
+    # LAN port for cloudflared (editor and webhooks); no router port forwarding.
     ports:
       - "{{ n8n_port }}:5678"
 
@@ -40,7 +40,7 @@ services:
       DB_POSTGRESDB_PORT: "5432"
       DB_POSTGRESDB_DATABASE: "{{ n8n_postgres_db }}"
       DB_POSTGRESDB_USER: "{{ n8n_postgres_user }}"
-      # Private editor; also the OAuth2 redirect base (<editor>/rest/oauth2-credential/callback).
+      # Public editor; also the OAuth2 redirect base (<editor>/rest/oauth2-credential/callback).
       N8N_HOST: "{{ n8n_editor_url | urlsplit('hostname') }}"
       N8N_PORT: "5678"
       N8N_PROTOCOL: https
@@ -51,7 +51,9 @@ services:
       # and the browser that started the flow.
       N8N_SKIP_AUTH_ON_OAUTH_CALLBACK: "false"
       N8N_OAUTH_BROWSER_BINDING: "true"
-      # One proxy in front: NPM (editor) or cloudflared (webhooks).
+      # Session cookie only over HTTPS (n8n default, set explicitly for the public editor).
+      N8N_SECURE_COOKIE: "true"
+      # One proxy in front: cloudflared (editor and webhooks).
       N8N_PROXY_HOPS: "1"
       GENERIC_TIMEZONE: "{{ n8n_timezone }}"
       TZ: "{{ n8n_timezone }}"

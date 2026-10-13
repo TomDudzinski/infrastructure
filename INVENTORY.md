@@ -295,9 +295,11 @@ Domyślny język interfejsu: `pl-PL`. Istniejący Open WebUI na `iza` bez zmian.
 Planowana VM `n8n01` na `dom`: `192.168.55.31`, 2 vCPU, 4 GiB RAM, 32 GiB,
 VMID do zatwierdzenia (Terraform domyślnie jej nie tworzy). n8n `2.43.4` +
 PostgreSQL `17.11` w Docker Compose, dane w `/opt/n8n/data` i `/opt/n8n/postgres`.
-Edytor prywatny i callback OAuth2 `https://authn8n.tdcode.pl` (NPM, DNS tylko wewnętrzny,
-LAN + Tailscale; `n8n.home.lab` przekierowuje), publiczne webhooki
+Edytor `https://n8n.tdcode.pl/` (publiczny przez Cloudflare Tunnel, logowanie n8n)
+i callback OAuth2 `https://n8n.tdcode.pl/rest/oauth2-credential/callback`; publiczne webhooki
 `https://webhookn8n.tdcode.pl/webhook/*` przez istniejący Cloudflare Tunnel (`cloudflare01`).
 Dodano do grup `automation_servers` i `zabbix_agents` (17 hostów).
-**Kod przygotowany, nie wdrożono.**
+Według zgłoszenia operatora (2026-10-13): wdrożona, VMID `208`, `/healthz` HTTP 200,
+webhooki działają. Zmiana edytora na `n8n.tdcode.pl`: **kod przygotowany, nie wdrożono**
+(wymaga playbooka i trasy tunelu `n8n.tdcode.pl` → `http://192.168.55.31:5678`).
 [Opis i procedura](docs/vms/n8n01.md).

@@ -1,9 +1,7 @@
 ---
-# Private editor and OAuth2 callback host: n8n builds redirect URIs only from
+# Public editor and OAuth2 callback host through the existing Cloudflare Tunnel,
+# protected by n8n authentication. n8n builds redirect URIs only from
 # N8N_EDITOR_BASE_URL and requires the editor session cookie on the callback.
-# Public suffix (accepted by Google) but resolved only by internal DNS / Tailscale
-# split DNS to npm01; no public DNS record and no Cloudflare Tunnel route.
-# The legacy name n8n.home.lab is an NPM redirect to this URL.
-n8n_editor_url: https://authn8n.tdcode.pl/
+n8n_editor_url: https://n8n.tdcode.pl/
 # Public production webhooks through the existing Cloudflare Tunnel (only ^/webhook/).
 n8n_webhook_url: https://webhookn8n.tdcode.pl/

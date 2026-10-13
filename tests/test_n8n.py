@@ -45,7 +45,7 @@ class N8nOfflineTests(unittest.TestCase):
 
     def test_urls_are_separated(self):
         host_vars = (ROOT / 'ansible/inventories/production/host_vars/n8n01.yml').read_text()
-        self.assertIn('n8n_editor_url: https://authn8n.tdcode.pl/', host_vars)
+        self.assertIn('n8n_editor_url: https://n8n.tdcode.pl/', host_vars)
         self.assertIn('n8n_webhook_url: https://webhookn8n.tdcode.pl/', host_vars)
 
     def test_oauth_callback_stays_authenticated(self):
@@ -53,8 +53,7 @@ class N8nOfflineTests(unittest.TestCase):
         compose = (ROLE / 'templates/compose.yml.j2').read_text()
         self.assertIn('N8N_SKIP_AUTH_ON_OAUTH_CALLBACK: "false"', compose)
         self.assertIn('N8N_OAUTH_BROWSER_BINDING: "true"', compose)
-        # Secure cookie stays at its default (true); it must not be disabled.
-        self.assertNotIn('N8N_SECURE_COOKIE', compose)
+        self.assertIn('N8N_SECURE_COOKIE: "true"', compose)
 
     def test_docs_publish_only_webhook_path(self):
         doc = (ROOT / 'docs/vms/n8n01.md').read_text()
