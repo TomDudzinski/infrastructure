@@ -30,7 +30,7 @@ class ZabbixOfflineTests(unittest.TestCase):
                 distribution = line.strip()[:-1]
             elif match := re.fullmatch(r'    "([\d.]+)": "([^"]+)"', line):
                 versions[(distribution, match[1])] = match[2]
-        self.assertEqual(set(versions), {('Debian', '12'), ('Debian', '13'), ('Ubuntu', '22.04'), ('Ubuntu', '24.04')})
+        self.assertEqual(set(versions), {('Debian', '12'), ('Debian', '13'), ('Ubuntu', '22.04'), ('Ubuntu', '24.04'), ('Ubuntu', '26.04')})
         for (distribution, release), version in versions.items():
             # Pinned 7.0 build whose suffix matches the distribution release.
             self.assertRegex(version, r'^1:7\.0\.\d+-\d+\+' + re.escape(distribution.lower() + release) + '$')

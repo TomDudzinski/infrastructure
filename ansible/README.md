@@ -196,6 +196,8 @@ ansible/
 │       │   ├── iza.yml
 │       │   └── mysql01.yml
 │       └── hosts.yml
+├── vaults/
+│   └── langfuse01.yml        # encrypted; loaded only by langfuse01-bootstrap.yml
 ├── playbooks/
 │   ├── bao01-bootstrap.yml
 │   ├── iza-bootstrap.yml

@@ -33,11 +33,11 @@ według faktów systemu: Debian 12/13 i Ubuntu 22.04/24.04 → `1:7.0.31-1+<syst
 (sprawdzone w indeksach oficjalnego repozytorium 7.0, 2026-10-13). System spoza mapy
 zatrzymuje rolę przed zmianami; nie ustawiaj `zabbix_agent_package_version` w `-e`,
 bo nadpisze mapę dla wszystkich hostów. Bez automatycznego upgrade/downgrade. Domyślna macierz:
-Debian 11/12/13 i Ubuntu 20.04/22.04/24.04; Proxmox korzysta z wersji bazowego Debiana.
+Debian 11/12/13 i Ubuntu 20.04/22.04/24.04/26.04; Proxmox korzysta z wersji bazowego Debiana.
 Domyślny URL `zabbix-release_latest` pochodzi z `repo.zabbix.com/zabbix/7.0/<system>/pool/...`.
-Dla Ubuntu 26.04 na `iza` wymagane jest potwierdzenie oficjalnego wsparcia i ustawienie
-`zabbix_agent_repository_deb_url` oraz `zabbix_agent_repository_deb_checksum`
-(np. `sha256:...`). Nie wybieraj repozytorium 24.04 jako zamiennika. Jeżeli brak
+Ubuntu 26.04 (`iza`) ma oficjalne repozytorium 7.0 (`resolute`) i pakiet
+`1:7.0.31-1+ubuntu26.04` (sprawdzone 2026-10-13); override nie jest potrzebny.
+Nie wybieraj repozytorium innego wydania jako zamiennika. Jeżeli brak
 obsługi danej wersji, nie wdrażaj na tym hoście; użyj `--limit` dla pozostałych.
 Override URL/checksum umożliwia też przypięcie konkretnego pakietu repozytorium;
 domyślny URL używa oficjalnego `zabbix-release_latest` dla wybranej gałęzi.
@@ -49,10 +49,10 @@ z kluczem czytelnym dla użytkownika `zabbix`. Nie przechowuj kluczy prywatnych 
 PSK (32–512 znaków hex, parzysta długość) przechowuj w Ansible Vault, najlepiej
 jako zaszyfrowaną zmienną per host przez `ansible-vault encrypt_string`.
 Rola zapisuje PSK z prawami 0640 i ukrywa je w logach i diff.
-Nie zmieniaj `host_vars/langfuse01/vault.yml`. Nie umieszczaj sekretów Langfuse
-w grupie `all` ani nie wczytuj ich przez `vars_files` w tym playbooku.
-`--limit mysql01` nie wymaga odszyfrowania Vault Langfuse; wybranie `langfuse01`
-może wymagać istniejącego hasła Vault. Nie używaj `ansible-inventory --list` z Vault.
+Vault Langfuse (`ansible/vaults/langfuse01.yml`) ładuje wyłącznie
+`langfuse01-bootstrap.yml` przez `vars_files`; nie jest w `host_vars`, więc ten playbook
+(także dla `langfuse01`) nie wymaga jego hasła. Nie umieszczaj sekretów Langfuse
+w grupie `all` ani nie wczytuj ich tutaj. Nie używaj `ansible-inventory --list` z Vault.
 
 Rola zarządza pakietem, repozytorium i głównym plikiem konfiguracyjnym Agent 2
 (z kopią poprzedniej konfiguracji), pozostawia istniejące fragmenty `.d` i inne usługi.

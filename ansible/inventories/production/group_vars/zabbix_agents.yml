@@ -13,3 +13,4 @@ zabbix_agent_package_versions:
   Ubuntu:
     "22.04": "1:7.0.31-1+ubuntu22.04"
     "24.04": "1:7.0.31-1+ubuntu24.04"
+    "26.04": "1:7.0.31-1+ubuntu26.04"

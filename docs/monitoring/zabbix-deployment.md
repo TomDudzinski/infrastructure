@@ -81,10 +81,10 @@ na odpowiednich hostach. Dostęp WWW przez HTTP nie szyfruje logowania w LAN.
 - Wersje agentów dla każdej dystrybucji pozostają do zatwierdzenia. Parametry
   serwera są przypięte w `group_vars/zabbix_servers.yml` (wartości podane przez
   administratora; dostępności pakietów i checksum nie sprawdzano przez sieć).
-- Ubuntu 26.04 na `iza`: oficjalne natywne repozytorium Agent 2 i SHA256 są wymagane
-  jako override istniejącej roli. Brak potwierdzonej obsługi blokuje wdrożenie na iza;
-  nie podstawiaj repozytorium 24.04. Nie deklaruj ukończenia wszystkich 15 hostów
-  przy pominięciu iza. Analogicznie sprawdź bazową wersję Debiana na Proxmox.
+- Ubuntu 26.04 na `iza`: oficjalne repozytorium 7.0 (`resolute`) zawiera
+  `1:7.0.31-1+ubuntu26.04` (sprawdzone 2026-10-13); rola używa domyślnego URL.
+  Nie podstawiaj repozytorium 24.04. Nie deklaruj ukończenia wszystkich 15 hostów
+  przy pominięciu iza.
 - Kontrakty API zainstalowanych Technitium i NPM: endpointy użyte w `access.py`,
   odpowiedzi `zone.type=Primary`, `records[].rData.ipAddress`, pola proxy hostów,
   lokalne porty 5380 i 81, Python 3 oraz skuteczne ACL. Wersje usług nie były
@@ -98,9 +98,8 @@ na odpowiednich hostach. Dostęp WWW przez HTTP nie szyfruje logowania w LAN.
 ## Pliki prywatne na iza
 
 Nie wpisuj sekretów do repozytorium. Użyj istniejącej metody i identyfikatora
-Ansible Vault. `host_vars/langfuse01/vault.yml` pozostaje nietknięty. Pełny zakres
-agentów i rejestracja mogą wymagać także odszyfrowania istniejącego Vault Langfuse;
-przekaż jego istniejący `--vault-id` zamiast przenosić sekrety do grupy `all`.
+Ansible Vault. Vault Langfuse (`ansible/vaults/langfuse01.yml`) ładuje tylko
+`langfuse01-bootstrap.yml`; playbooki Zabbix go nie odszyfrowują.
 Nie wyświetlaj `ansible-inventory --list` z odszyfrowanymi sekretami.
 
 ```bash
@@ -141,12 +140,7 @@ zabbix_initial_admin_bootstrap_approved: true
 zabbix_local_api_compatibility_approved: true
 # Wersji Agent 2 nie ustawiaj tutaj: pochodzą z mapy dystrybucji w
 # group_vars/zabbix_agents.yml (zabbix_agent_package_versions).
-zabbix_agent_repository_deb_url: "{{ zabbix_agent_repositories.get(inventory_hostname, {}).get('url', '') }}"
-zabbix_agent_repository_deb_checksum: "{{ zabbix_agent_repositories.get(inventory_hostname, {}).get('checksum', '') }}"
-zabbix_agent_repositories:
-  iza:
-    url: <OFFICIAL_7.0_UBUNTU_26.04_RELEASE_DEB_URL>
-    checksum: sha256:<64_HEX>
+# Repozytorium Agent 2 (także Ubuntu 26.04 na iza) wynika z domyślnego URL roli.
 ```
 
 Prywatny `zabbix.tfvars` w tym samym katalogu:
@@ -268,9 +262,8 @@ plan bez `-target` (z tym samym var-file), bez automatycznego zastosowania.
 
 ### 2–5. Serwer → DNS/NPM → agenci → rejestracja
 
-Polecenia zakładają jedno istniejące hasło Vault (`--ask-vault-pass`). Jeśli Langfuse
-korzysta z osobnego identyfikatora, zastosuj istniejące `--vault-id ...` dla obu
-plików. Pliki prywatne pozostają na iza. Nie uruchamiaj z `--diff` dla sekretów.
+Polecenia zakładają jedno hasło Vault (`--ask-vault-pass`) dla prywatnego `vault.yml`
+Zabbix; Vault Langfuse nie jest potrzebny. Pliki prywatne pozostają na iza. Nie uruchamiaj z `--diff` dla sekretów.
 
 ```bash
 cd /opt/ai/projects/infrastructure/ansible
@@ -292,7 +285,7 @@ ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
   -e zabbix_registration_mode=pilot \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
   -e @/home/tom/.config/infrastructure/zabbix/vault.yml
-# Dopiero po weryfikacji pilota (poniżej) i potwierdzeniu obsługi Ubuntu 26.04 dla iza:
+# Dopiero po weryfikacji pilota (poniżej):
 ansible-playbook playbooks/zabbix-agents.yml --limit 'zabbix_agents:!zabbix01' \
   --ask-become-pass --ask-vault-pass \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \

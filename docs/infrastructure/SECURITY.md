@@ -4,7 +4,7 @@ Analiza lokalna; bieżące ustawienia hostów, ACL, TLS i firewalli: **unverifie
 
 | Obszar | Ustalenie ze źródeł | Status runtime | Źródło |
 |---|---|---|---|
-| Sekrety Ansible | Istniejący Vault dla Langfuse; zachować podejście Vault | unverified | ansible/inventories/production/host_vars/langfuse01/vault.yml (tylko lokalizacja) |
+| Sekrety Ansible | Istniejący Vault dla Langfuse; zachować podejście Vault | unverified | ansible/vaults/langfuse01.yml, ładowany tylko przez playbooks/langfuse01-bootstrap.yml (tylko lokalizacja) |
 | Proxmox | Osobne tożsamości audit/manage; provider z insecure=true | unverified | terraform/providers.tf; docs/security/terraform-proxmox-access.md |
 | SSH | Dedykowana automatyzacja; część dtcode ma tylko wpisy IP | unverified | ansible/README.md; docs/security/automation-ssh.md |
 | OpenBao/PKI | Konfiguracja i opis odzyskiwania istnieją | unverified | docs/security/pki.md; docs/procedures/openbao-recovery.md |

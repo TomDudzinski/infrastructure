@@ -3,6 +3,9 @@
   hosts: langfuse01
   become: true
   gather_facts: true
+  # Loaded only here so other playbooks targeting langfuse01 never need this Vault password.
+  vars_files:
+    - ../vaults/langfuse01.yml
 
   roles:
     - role: qemu_guest_agent
