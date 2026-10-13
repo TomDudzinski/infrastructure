@@ -34,7 +34,7 @@ class ZabbixOfflineTests(unittest.TestCase):
         self.assertIn('no_log: true', psk)
         self.assertIn('diff: false', psk)
         self.assertIn("mode: '0640'", psk)
-        self.assertEqual(text.count('when: not ansible_check_mode'), 3)
+        self.assertEqual(text.count('not ansible_check_mode'), 3)
         self.assertNotIn('latest\n', text)
         self.assertNotIn('vault.yml', text)
         self.assertIn('notify: Restart Zabbix Agent 2', text)

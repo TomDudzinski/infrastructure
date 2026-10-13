@@ -400,3 +400,13 @@ Testy lokalne: 28 testów porównania/adaptera oraz 12 testów katalogu przeszł
 walidacja 11 usług poprawna. Ansible nie uruchamiano; `ansible-playbook`
 pozostaje niedostępny lokalnie.
 [Instrukcja pierwszego odczytu](ansible/roles/npm_proxy_hosts/README.md#first-safe-run--on-iza-only-not-performed-here).
+
+## Zabbix — rejestracja pilot/full (2026-10-13)
+
+Przygotowano lokalnie monitoring całej grupy `zabbix_agents` (15 hostów):
+wymagany `zabbix_registration_mode` (`pilot` = tylko `zabbix01`, `full` = wszystkie),
+odporne na pola API porównywanie tagów, bezpieczne komunikaty błędów rejestracji,
+adres `iza` w `host_vars` oraz przywrócone ustawienia `sudo.ws` dla `iza`.
+Procedura: [Zabbix](docs/monitoring/zabbix-deployment.md), sekcja „2–5“.
+Testy offline Zabbix: 36 (3 pominięte); Ansible niedostępny lokalnie.
+**Nie wdrożono i nie zweryfikowano w infrastrukturze.**

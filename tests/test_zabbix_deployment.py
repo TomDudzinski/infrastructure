@@ -29,8 +29,9 @@ class FakeZabbix:
 
     def __call__(self, method, params):
         if method == 'template.get':
-            return [{'host': 'Linux by Zabbix agent active', 'templateid': '10'},
-                    {'host': 'Proxmox VE by HTTP', 'templateid': '11', 'macros': [{'macro': name} for name in ['{$PVE.URL.HOST}', '{$PVE.URL.PORT}', '{$PVE.TOKEN.ID}', '{$PVE.TOKEN.SECRET}']]}]
+            templates = [{'host': 'Linux by Zabbix agent active', 'templateid': '10'},
+                         {'host': 'Proxmox VE by HTTP', 'templateid': '11', 'macros': [{'macro': name} for name in ['{$PVE.URL.HOST}', '{$PVE.URL.PORT}', '{$PVE.TOKEN.ID}', '{$PVE.TOKEN.SECRET}']]}]
+            return [t for t in templates if t['host'] in params['filter']['host']]
         if method == 'host.get':
             return copy.deepcopy(self.hosts)
         if method == 'hostgroup.get':
@@ -192,6 +193,41 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(len(api.hosts), 15)
         self.assertFalse(registration.reconcile(api, hosts, tokens))
         self.assertEqual(len(api.hosts), 15)
+
+    def test_api_tag_fields_do_not_break_ownership_or_idempotency(self):
+        api = FakeZabbix()
+        hosts = [dict(name='zabbix01', ip='192.168.55.29', psk='ab' * 32)]
+        self.assertTrue(registration.reconcile(api, hosts, {}))
+        # Zabbix 7.0 returns read-only tag fields that must not be compared or sent back.
+        for tag in api.hosts[0]['tags']:
+            tag['automatic'] = '0'
+        api.writes.clear()
+        self.assertFalse(registration.reconcile(api, hosts, {}))
+        hosts[0]['psk'] = 'cd' * 32
+        self.assertTrue(registration.reconcile(api, hosts, {}))
+        updates = [params for method, params in api.writes if method == 'host.update']
+        self.assertTrue(all(set(tag) == {'tag', 'value'} for tag in updates[0]['tags']))
+
+    def test_pilot_then_full_registration(self):
+        names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
+                 'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
+                 'grafana01', 'cloudflare01', 'zabbix01']
+        hosts = [dict(name=name, ip='192.168.55.' + str(index + 40), psk='ab' * 32)
+                 for index, name in enumerate(names)]
+        tokens = {name: dict(id='monitor@pve!zabbix', secret='test-only') for name in ['dom', 'dtcode']}
+        pilot = dict(mode='pilot', hosts=hosts[-1:], proxmox={})
+        full = dict(mode='full', hosts=hosts, proxmox=tokens)
+        registration.validate(pilot)
+        registration.validate(full)
+        for invalid in [dict(pilot, hosts=hosts[:1]), dict(pilot, proxmox=tokens),
+                        dict(full, hosts=hosts[:-1]), dict(full, mode='other')]:
+            with self.assertRaises(ValueError):
+                registration.validate(invalid)
+        api = FakeZabbix()
+        self.assertTrue(registration.reconcile(api, pilot['hosts'], {}))
+        self.assertTrue(registration.reconcile(api, hosts, tokens))
+        self.assertEqual(len(api.hosts), 15)
+        self.assertFalse(registration.reconcile(api, hosts, tokens))
 
     def test_all_new_python_sources_compile_without_execution(self):
         for directory in ['zabbix_server', 'zabbix_registration', 'zabbix_local_access']:

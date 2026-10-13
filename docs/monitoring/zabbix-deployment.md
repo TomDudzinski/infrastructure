@@ -284,21 +284,45 @@ ansible-playbook playbooks/zabbix-local-access.yml --limit dns01,npm01 \
   --ask-become-pass --ask-vault-pass \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
   -e @/home/tom/.config/infrastructure/zabbix/vault.yml
-# Najpierw jeden host pilotażowy:
+# Pilot: agent i rejestracja wyłącznie zabbix01 (bez tokenów Proxmox):
 ansible-playbook playbooks/zabbix-agents.yml --limit zabbix01 \
-  --ask-become-pass --ask-vault-pass \
-  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
-  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
-# Dopiero po weryfikacji pilota i potwierdzeniu obsługi Ubuntu 26.04:
-ansible-playbook playbooks/zabbix-agents.yml --limit zabbix_agents \
   --ask-become-pass --ask-vault-pass \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
   -e @/home/tom/.config/infrastructure/zabbix/vault.yml
 ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
   --ask-become-pass --ask-vault-pass \
+  -e zabbix_registration_mode=pilot \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+# Dopiero po weryfikacji pilota (poniżej) i potwierdzeniu obsługi Ubuntu 26.04 dla iza:
+ansible-playbook playbooks/zabbix-agents.yml --limit 'zabbix_agents:!zabbix01' \
+  --ask-become-pass --ask-vault-pass \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+# Pełna rejestracja wszystkich 15 hostów (wymaga PSK wszystkich hostów i tokenów dom/dtcode):
+ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
+  --ask-become-pass --ask-vault-pass \
+  -e zabbix_registration_mode=full \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
   -e @/home/tom/.config/infrastructure/zabbix/vault.yml
 ```
+
+`zabbix_registration_mode` jest wymagany: `pilot` rejestruje tylko `zabbix01`,
+`full` — całą grupę `zabbix_agents`. Pełny tryb aktualizuje `zabbix01` utworzony
+w pilocie (tag `managed-by`), bez duplikatów. Błąd rejestracji zwraca bezpieczny
+komunikat (nazwa hosta lub metody API), bez sekretów.
+
+Weryfikacja pilota (na `zabbix01`, a potem w panelu):
+
+```bash
+ssh -t tom@192.168.55.29 'systemctl is-active zabbix-server zabbix-agent2 \
+  && sudo journalctl -u zabbix-agent2 -u zabbix-server --since -15min \
+     | grep -iE "psk|active check|cannot|error" | tail -n 20'
+```
+
+W panelu: Monitoring → Hosts → `zabbix01` — dostępność ZBX (aktywne, zielona),
+Latest data z ostatnich minut (np. `system.uptime`, CPU). Po pełnej rejestracji
+to samo dla 15 hostów oraz dane szablonu `Proxmox VE by HTTP` dla `dom` i `dtcode`.
 
 Serwer i integracje API wymagają realnego wykonania; `--check` nie symuluje pełnej
 instalacji ani zapisów API. Dla agentów pozostaje opisana wcześniej ograniczona
