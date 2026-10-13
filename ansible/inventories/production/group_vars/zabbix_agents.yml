@@ -5,3 +5,11 @@ zabbix_agent_tls_connect: psk
 zabbix_agent_tls_accept: psk
 zabbix_agent_tls_psk_identity: "homelab-{{ inventory_hostname }}"
 zabbix_agent_tls_psk: "{{ vault_zabbix_psks[inventory_hostname] }}"
+# Pinned Agent 2 builds, checked in the official Zabbix 7.0 repository indexes (2026-10-13).
+zabbix_agent_package_versions:
+  Debian:
+    "12": "1:7.0.31-1+debian12"
+    "13": "1:7.0.31-1+debian13"
+  Ubuntu:
+    "22.04": "1:7.0.31-1+ubuntu22.04"
+    "24.04": "1:7.0.31-1+ubuntu24.04"

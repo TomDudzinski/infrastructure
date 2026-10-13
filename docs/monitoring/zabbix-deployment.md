@@ -139,10 +139,8 @@ zabbix_deployment_approved: true
 # Adres wspólny pochodzi z group_vars/all/zabbix.yml: 192.168.55.29
 zabbix_initial_admin_bootstrap_approved: true
 zabbix_local_api_compatibility_approved: true
-zabbix_agent_package_version: "{{ zabbix_agent_versions[inventory_hostname] }}"
-zabbix_agent_versions:
-  dom: <EXACT_APT_VERSION>
-  # Uzupełnij wszystkie 15 hostów, z uwzględnieniem ich dystrybucji.
+# Wersji Agent 2 nie ustawiaj tutaj: pochodzą z mapy dystrybucji w
+# group_vars/zabbix_agents.yml (zabbix_agent_package_versions).
 zabbix_agent_repository_deb_url: "{{ zabbix_agent_repositories.get(inventory_hostname, {}).get('url', '') }}"
 zabbix_agent_repository_deb_checksum: "{{ zabbix_agent_repositories.get(inventory_hostname, {}).get('checksum', '') }}"
 zabbix_agent_repositories:

@@ -21,6 +21,23 @@ class ZabbixOfflineTests(unittest.TestCase):
         self.assertIn('        ansible_user: root', text)
         self.assertIn('ansible_connection: local', text)
 
+    def test_distribution_versions_and_repository_url(self):
+        text = (ROOT / 'ansible/inventories/production/group_vars/zabbix_agents.yml').read_text()
+        mapping = text.split('zabbix_agent_package_versions:\n')[1]
+        versions, distribution = {}, None
+        for line in mapping.splitlines():
+            if re.fullmatch(r'  (\w+):', line):
+                distribution = line.strip()[:-1]
+            elif match := re.fullmatch(r'    "([\d.]+)": "([^"]+)"', line):
+                versions[(distribution, match[1])] = match[2]
+        self.assertEqual(set(versions), {('Debian', '12'), ('Debian', '13'), ('Ubuntu', '22.04'), ('Ubuntu', '24.04')})
+        for (distribution, release), version in versions.items():
+            # Pinned 7.0 build whose suffix matches the distribution release.
+            self.assertRegex(version, r'^1:7\.0\.\d+-\d+\+' + re.escape(distribution.lower() + release) + '$')
+        tasks = (ROLE / 'tasks/main.yml').read_text()
+        self.assertIn("'https://repo.zabbix.com/zabbix/' + zabbix_agent_release + '/' + (ansible_distribution | lower)", tasks)
+        self.assertNotIn('/release/', tasks)
+
     def test_guard_precedes_remote_facts(self):
         text = (ROOT / 'ansible/playbooks/zabbix-agents.yml').read_text()
         self.assertIn('gather_facts: false', text)

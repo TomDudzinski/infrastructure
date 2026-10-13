@@ -78,7 +78,7 @@
 
 - name: Download official release repository package
   ansible.builtin.get_url:
-    url: "{{ zabbix_agent_repository_deb_url or ('https://repo.zabbix.com/zabbix/' + zabbix_agent_release + '/release/' + (ansible_distribution | lower) + '/pool/main/z/zabbix-release/zabbix-release_latest_' + zabbix_agent_release + '+' + (ansible_distribution | lower) + zabbix_agent_os_version + '_all.deb') }}"
+    url: "{{ zabbix_agent_repository_deb_url or ('https://repo.zabbix.com/zabbix/' + zabbix_agent_release + '/' + (ansible_distribution | lower) + '/pool/main/z/zabbix-release/zabbix-release_latest_' + zabbix_agent_release + '+' + (ansible_distribution | lower) + zabbix_agent_os_version + '_all.deb') }}"
     dest: /var/tmp/zabbix-agent-release.deb
     checksum: "{{ zabbix_agent_repository_deb_checksum or omit }}"
     mode: '0644'

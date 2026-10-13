@@ -18,7 +18,6 @@ Przed uruchomieniem ustaw w `group_vars/zabbix_agents.yml` lub odpowiednich
 zabbix_deployment_approved: true
 zabbix_server_ip: "APPROVED_ZABBIX_SERVER_IP"
 zabbix_agent_release: "7.0"
-zabbix_agent_package_version: "EXACT_APT_VERSION"
 zabbix_agent_server: "ZABBIX_SERVER_ADDRESS"
 zabbix_agent_server_active: "ZABBIX_SERVER_ADDRESS:10051"
 zabbix_agent_hostname: "HOSTNAME_REGISTERED_IN_ZABBIX"
@@ -28,11 +27,14 @@ zabbix_agent_tls_psk_identity: "HOST_UNIQUE_IDENTITY"
 zabbix_agent_tls_psk: "{{ vault_zabbix_agent_tls_psk }}"
 ```
 
-Nie kopiuj placeholderów do wdrożenia. Wersja pakietu jest wymagana (łącznie z epoch
-oraz sufiksem dystrybucji), bez automatycznego upgrade/downgrade. Sprawdź ją na `iza`
-przed wdrożeniem w oficjalnym repozytorium dla danego systemu. Domyślna macierz:
+Nie kopiuj placeholderów do wdrożenia. Dokładna wersja pakietu (z epoch i sufiksem
+dystrybucji) wynika z mapy `zabbix_agent_package_versions` w `group_vars/zabbix_agents.yml`
+według faktów systemu: Debian 12/13 i Ubuntu 22.04/24.04 → `1:7.0.31-1+<system>`
+(sprawdzone w indeksach oficjalnego repozytorium 7.0, 2026-10-13). System spoza mapy
+zatrzymuje rolę przed zmianami; nie ustawiaj `zabbix_agent_package_version` w `-e`,
+bo nadpisze mapę dla wszystkich hostów. Bez automatycznego upgrade/downgrade. Domyślna macierz:
 Debian 11/12/13 i Ubuntu 20.04/22.04/24.04; Proxmox korzysta z wersji bazowego Debiana.
-Dostępność pakietów i URL nie była sprawdzana przez sieć.
+Domyślny URL `zabbix-release_latest` pochodzi z `repo.zabbix.com/zabbix/7.0/<system>/pool/...`.
 Dla Ubuntu 26.04 na `iza` wymagane jest potwierdzenie oficjalnego wsparcia i ustawienie
 `zabbix_agent_repository_deb_url` oraz `zabbix_agent_repository_deb_checksum`
 (np. `sha256:...`). Nie wybieraj repozytorium 24.04 jako zamiennika. Jeżeli brak

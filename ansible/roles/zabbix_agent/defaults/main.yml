@@ -1,7 +1,9 @@
 ---
 zabbix_agent_release: "7.0"
-# Exact apt version, including epoch and distribution suffix; deliberately required.
-zabbix_agent_package_version: ""
+# Exact apt versions per distribution and release (Debian major, Ubuntu full version);
+# an unlisted platform resolves to "" and fails validation before any change.
+zabbix_agent_package_versions: {}
+zabbix_agent_package_version: "{{ zabbix_agent_package_versions.get(ansible_distribution, {}).get(ansible_distribution_major_version if ansible_distribution == 'Debian' else ansible_distribution_version, '') }}"
 zabbix_agent_server: ""
 zabbix_agent_server_active: "{{ zabbix_agent_server }}"
 zabbix_agent_hostname: "{{ inventory_hostname }}"
