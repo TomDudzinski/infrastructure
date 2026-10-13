@@ -10,6 +10,7 @@ services:
     environment:
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       WHISPER_LANGUAGE: pl
+
     volumes:
       - /opt/ai/data/open-webui:/app/backend/data
 

@@ -259,6 +259,53 @@ class DeploymentTests(unittest.TestCase):
         self.assertTrue(all({'templateid': '10'} in h['parentTemplates'] for h in api.hosts))
         self.assertTrue(all(h['tls_connect'] == 2 for h in api.hosts))
 
+    def test_single_host_registration_touches_only_target(self):
+        names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
+                 'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
+                 'grafana01', 'cloudflare01', 'webui01', 'zabbix01']
+        hosts = [dict(name=name, ip='192.168.55.' + str(index + 40), psk='ab' * 32)
+                 for index, name in enumerate(names)]
+        hosts[names.index('webui01')]['ip'] = '192.168.55.30'
+        # Same address, rotated PSK: the fake API supports interface updates only on its first host.
+        webui = [dict(name='webui01', ip='192.168.55.30', psk='cd' * 32)]
+        tokens = {'dom': dict(id='monitor@pve!zabbix', secret='test-only')}
+        registration.validate(dict(mode='single', hosts=webui, proxmox={}))
+        registration.validate(dict(mode='single', hosts=hosts[:1], proxmox=tokens))
+        for invalid in [dict(mode='single', hosts=hosts[:2], proxmox={}),
+                        dict(mode='single', hosts=[], proxmox={}),
+                        dict(mode='single', hosts=webui, proxmox=tokens)]:
+            with self.assertRaises(ValueError):
+                registration.validate(invalid)
+        # Pilot and full keep their exact host-count contracts.
+        with self.assertRaises(ValueError):
+            registration.validate(dict(mode='pilot', hosts=webui, proxmox={}))
+        with self.assertRaises(ValueError):
+            registration.validate(dict(mode='full', hosts=webui, proxmox={}))
+        # New host from an empty server: only webui01 is created.
+        api = FakeZabbix()
+        self.assertTrue(registration.reconcile(api, webui, {}))
+        self.assertEqual([h['host'] for h in api.hosts], ['webui01'])
+        # Existing fleet: single mode updates webui01 only and deletes nothing.
+        api = FakeZabbix()
+        self.assertTrue(registration.reconcile(api, hosts, {}))
+        others = copy.deepcopy([h for h in api.hosts if h['host'] != 'webui01'])
+        api.writes.clear()
+        self.assertTrue(registration.reconcile(api, webui, {}))
+        webui_id = next(h['hostid'] for h in api.hosts if h['host'] == 'webui01')
+        self.assertEqual([w[0] for w in api.writes], ['host.update'])
+        self.assertEqual(api.writes[0][1]['hostid'], webui_id)
+        self.assertEqual(len(api.hosts), 16)
+        self.assertEqual([h for h in api.hosts if h['host'] != 'webui01'], others)
+        self.assertFalse(registration.reconcile(api, webui, {}))
+
+    def test_single_mode_ansible_guard_uses_zabbix_agents_group(self):
+        # Static check only: Ansible is unavailable locally, so the assert is not executed here.
+        tasks = (ROOT / 'ansible/roles/zabbix_registration/tasks/main.yml').read_text()
+        self.assertIn("zabbix_registration_mode | default('') in ['pilot', 'full', 'single']", tasks)
+        self.assertIn("zabbix_registration_target | default('') in groups['zabbix_agents']", tasks)
+        self.assertIn("[zabbix_registration_target] if zabbix_registration_mode == 'single'", tasks)
+        self.assertIn("selectattr('key', 'equalto', zabbix_registration_target)", tasks)
+
     def run_main(self, fake_urlopen, secret):
         settings = dict(mode='pilot', password=secret, proxmox={},
                         hosts=[dict(name='zabbix01', ip='192.168.55.29', psk='ab' * 32)])

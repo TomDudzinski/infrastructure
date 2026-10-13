@@ -169,8 +169,14 @@ def validate(settings):
         # Proxmox API tokens are optional; without them dom/dtcode are monitored by Agent 2 only.
         if not set(settings.get('proxmox') or {}) <= {'dom', 'dtcode'}:
             raise CheckFailed('Proxmox credentials are allowed only for dom and dtcode')
+    elif mode == 'single':
+        # Inventory membership is checked by Ansible; reconcile touches only listed hosts.
+        if len(hosts) != 1:
+            raise CheckFailed('Single mode allows exactly one host')
+        if not set(settings.get('proxmox') or {}) <= {hosts[0]['name']} & {'dom', 'dtcode'}:
+            raise CheckFailed('Single mode allows Proxmox credentials only for its own dom or dtcode host')
     else:
-        raise CheckFailed('Registration mode must be pilot or full')
+        raise CheckFailed('Registration mode must be pilot, full or single')
     for h in hosts:
         if ipaddress.ip_address(h['ip']) not in ipaddress.ip_network('192.168.55.0/24') or h['ip'] in ('192.168.55.0', '192.168.55.255'):
             raise CheckFailed('Host outside LAN: ' + h['name'])

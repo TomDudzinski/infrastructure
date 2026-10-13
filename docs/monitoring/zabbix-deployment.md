@@ -305,6 +305,19 @@ ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
 w pilocie (tag `managed-by`), bez duplikatów. Błąd rejestracji zwraca bezpieczny
 komunikat (nazwa hosta lub metody API), bez sekretów.
 
+`single` rejestruje lub aktualizuje jeden host z grupy `zabbix_agents`
+(`zabbix_registration_target`); pozostałych hostów nie odczytuje, nie zmienia ani
+nie usuwa. Wymaga PSK tylko tego hosta; token Proxmox jest przekazywany wyłącznie
+dla `dom`/`dtcode` jako celu. Przykład dla `webui01`:
+
+```bash
+ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
+  --ask-become-pass --ask-vault-pass \
+  -e zabbix_registration_mode=single -e zabbix_registration_target=webui01 \
+  -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
+  -e @/home/tom/.config/infrastructure/zabbix/vault.yml
+```
+
 Weryfikacja pilota (na `zabbix01`, a potem w panelu):
 
 ```bash

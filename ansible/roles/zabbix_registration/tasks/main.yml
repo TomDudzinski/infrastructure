@@ -2,8 +2,15 @@
 - name: Require an explicit registration mode
   ansible.builtin.assert:
     that:
-      - zabbix_registration_mode | default('') in ['pilot', 'full']
-    fail_msg: Set -e zabbix_registration_mode=pilot (zabbix01 only) or full (all zabbix_agents).
+      - zabbix_registration_mode | default('') in ['pilot', 'full', 'single']
+    fail_msg: Set -e zabbix_registration_mode=pilot (zabbix01 only), full (all zabbix_agents) or single.
+
+- name: Require a single target from the zabbix_agents group
+  ansible.builtin.assert:
+    that:
+      - zabbix_registration_target | default('') in groups['zabbix_agents']
+    fail_msg: Single mode requires -e zabbix_registration_target=<host from zabbix_agents>.
+  when: zabbix_registration_mode == 'single'
 
 - name: Reset transient host registration data for repeated role execution
   ansible.builtin.set_fact:
@@ -12,7 +19,7 @@
 - name: Build host registration data using the existing inventory
   ansible.builtin.set_fact:
     zabbix_registration_hosts: "{{ zabbix_registration_hosts + [{'name': item, 'ip': hostvars[item].zabbix_agent_ip | default(hostvars[item].ansible_host), 'psk': vault_zabbix_psks[item]}] }}"
-  loop: "{{ ['zabbix01'] if zabbix_registration_mode == 'pilot' else groups['zabbix_agents'] }}"
+  loop: "{{ ['zabbix01'] if zabbix_registration_mode == 'pilot' else [zabbix_registration_target] if zabbix_registration_mode == 'single' else groups['zabbix_agents'] }}"
   no_log: true
 
 - name: Install API reconciler
@@ -24,7 +31,7 @@
 - name: Reconcile hosts with PSK and stock templates via loopback API
   ansible.builtin.command:
     argv: [python3, /usr/local/lib/zabbix-register.py]
-    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode == 'pilot' else vault_zabbix_proxmox_tokens | default({})), 'mode': zabbix_registration_mode} | to_json }}"
+    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode == 'pilot' else (vault_zabbix_proxmox_tokens | default({}) | dict2items | selectattr('key', 'equalto', zabbix_registration_target) | items2dict) if zabbix_registration_mode == 'single' else vault_zabbix_proxmox_tokens | default({})), 'mode': zabbix_registration_mode} | to_json }}"
   register: zabbix_registration_result
   changed_when: zabbix_registration_result.rc == 0 and (zabbix_registration_result.stdout | from_json).changed
   # Defer failure to the sanitized task below; the script never prints secrets to stderr.
