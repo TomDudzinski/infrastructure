@@ -4,21 +4,37 @@ import ipaddress
 import json
 import re
 import sys
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+
+class CheckFailed(ValueError):
+    """Expected precondition failure; messages contain only host names and fixed text."""
+
+
+class APIError(RuntimeError):
+    """Zabbix JSON-RPC error; keeps only the method and numeric error code."""
+
+    def __init__(self, method, code):
+        super().__init__('Zabbix API rejected ' + method)
+        self.code = code
 
 
 class API:
     def __init__(self, url, token):
         self.url, self.token = url, token
+        self.method = None
 
     def __call__(self, method, params):
+        self.method = method
         body = json.dumps(dict(jsonrpc='2.0', method=method, params=params, id=1)).encode()
         request = Request(self.url, body, {'Content-Type': 'application/json-rpc',
                                           **({'Authorization': 'Bearer ' + self.token} if self.token else {})})
         with urlopen(request, timeout=30) as response:
             result = json.load(response)
         if 'error' in result:
-            raise RuntimeError('Zabbix API rejected ' + method)
+            # Never expose error 'data': it may echo request parameters.
+            raise APIError(method, result['error'].get('code') if isinstance(result['error'], dict) else None)
         return result['result']
 
 
@@ -38,12 +54,12 @@ def reconcile(api, hosts, proxmox):
     templates = api('template.get', {'output': ['templateid', 'host'], 'selectMacros': 'extend', 'filter': {'host': names}})
     ids = {x['host']: x['templateid'] for x in templates}
     if set(ids) != set(names):
-        raise ValueError('Required stock templates are missing')
+        raise CheckFailed('Required stock templates are missing')
     if proxmox:
         pve_template = next(t for t in templates if t['host'] == 'Proxmox VE by HTTP')
         expected = {'{$PVE.URL.HOST}', '{$PVE.URL.PORT}', '{$PVE.TOKEN.ID}', '{$PVE.TOKEN.SECRET}'}
         if not expected <= {m['macro'] for m in pve_template['macros']}:
-            raise ValueError('Installed Proxmox template macro contract differs')
+            raise CheckFailed('Installed Proxmox template macro contract differs')
     current = api('host.get', {'output': ['hostid', 'host', 'tls_connect', 'tls_accept', 'tls_psk_identity'],
                               'filter': {'host': [h['name'] for h in hosts]},
                               'selectHostGroups': ['groupid'], 'selectParentTemplates': ['templateid'],
@@ -52,7 +68,7 @@ def reconcile(api, hosts, proxmox):
     existing = {h['host']: h for h in current}
     for h in current:
         if OWNER_TAG not in plain_tags(h['tags']):
-            raise ValueError('Existing unowned host needs explicit adoption: ' + h['host'])
+            raise CheckFailed('Existing unowned host needs explicit adoption: ' + h['host'])
     group_names = ['Homelab/Linux', 'Homelab/Proxmox']
     groups = api('hostgroup.get', {'output': ['groupid', 'name'], 'filter': {'name': group_names}})
     group_ids = {g['name']: g['groupid'] for g in groups}
@@ -93,7 +109,7 @@ def reconcile(api, hosts, proxmox):
         old_templates = {t['templateid'] for t in old['parentTemplates']}
         interfaces = [i for i in old['interfaces'] if str(i['type']) == '1' and str(i['main']) == '1']
         if len(interfaces) != 1:
-            raise ValueError('Expected exactly one main agent interface: ' + name)
+            raise CheckFailed('Expected exactly one main agent interface: ' + name)
         actual = interfaces[0]
         interface_changed = any(str(actual[k]) != str(v) for k, v in interface.items())
         old_tags = plain_tags(old['tags'])
@@ -130,39 +146,72 @@ def validate(settings):
     mode = settings.get('mode')
     if mode == 'pilot':
         if len(hosts) != 1 or hosts[0]['name'] != 'zabbix01':
-            raise ValueError('Pilot mode allows only zabbix01')
+            raise CheckFailed('Pilot mode allows only zabbix01')
         if settings.get('proxmox') != {}:
-            raise ValueError('Pilot mode must not include Proxmox credentials')
+            raise CheckFailed('Pilot mode must not include Proxmox credentials')
     elif mode == 'full':
         if len(hosts) != 15 or len({h['name'] for h in hosts}) != 15 or len({h['ip'] for h in hosts}) != 15:
-            raise ValueError('Exactly 15 unique hosts and addresses are required')
+            raise CheckFailed('Exactly 15 unique hosts and addresses are required')
         if set(settings['proxmox']) != {'dom', 'dtcode'}:
-            raise ValueError('Read-only Proxmox credentials for both hosts are required')
+            raise CheckFailed('Read-only Proxmox credentials for both hosts are required')
     else:
-        raise ValueError('Registration mode must be pilot or full')
+        raise CheckFailed('Registration mode must be pilot or full')
     for h in hosts:
         if ipaddress.ip_address(h['ip']) not in ipaddress.ip_network('192.168.55.0/24') or h['ip'] in ('192.168.55.0', '192.168.55.255'):
-            raise ValueError('Host outside LAN: ' + h['name'])
+            raise CheckFailed('Host outside LAN: ' + h['name'])
         if not re.fullmatch(r'(?:[0-9a-fA-F]{2}){16,256}', h['psk']):
-            raise ValueError('Invalid PSK: ' + h['name'])
+            raise CheckFailed('Invalid PSK: ' + h['name'])
+
+
+def describe(error, stage, method):
+    """Build a one-line diagnostic without exception text from untrusted sources."""
+    if isinstance(error, CheckFailed):
+        category, detail = 'precondition', str(error)
+    elif isinstance(error, APIError):
+        category, detail = 'api_error', 'code=' + str(error.code)
+    elif isinstance(error, HTTPError):
+        category, detail = 'http_error', 'status=' + str(error.code)
+    elif isinstance(error, (URLError, OSError)):
+        category, detail = 'connection', ''
+    elif isinstance(error, ValueError):
+        category, detail = 'invalid_data', ''
+    elif isinstance(error, (KeyError, TypeError, IndexError, StopIteration)):
+        category, detail = 'unexpected_response', ''
+    else:
+        category, detail = 'internal', ''
+    parts = ['Registration failed:', 'stage=' + stage, 'operation=' + (method or 'none'),
+             'category=' + category, 'exception=' + type(error).__name__]
+    return ' '.join(parts + ([detail] if detail else []))
+
+
+def logout(api):
+    # Best effort: a logout failure must never replace the registration result.
+    try:
+        api('user.logout', [])
+    except Exception as error:
+        print(describe(error, 'logout', 'user.logout').replace('failed', 'warning', 1), file=sys.stderr)
 
 
 def main():
-    settings = json.load(sys.stdin)
-    validate(settings)
-    api = API('http://127.0.0.1:8080/api_jsonrpc.php', None)
-    api.token = api('user.login', {'username': 'Admin', 'password': settings['password']})
+    stage, api = 'input', None
     try:
-        print(json.dumps({'changed': reconcile(api, settings['hosts'], settings['proxmox'])}))
-    finally:
-        api('user.logout', [])
+        settings = json.load(sys.stdin)
+        stage = 'validate'
+        validate(settings)
+        stage = 'login'
+        api = API('http://127.0.0.1:8080/api_jsonrpc.php', None)
+        api.token = api('user.login', {'username': 'Admin', 'password': settings['password']})
+        stage = 'reconcile'
+        changed = reconcile(api, settings['hosts'], settings['proxmox'])
+    except Exception as error:
+        # Capture the failing operation before logout overwrites it.
+        method = api.method if api else None
+        if stage == 'reconcile':
+            logout(api)
+        sys.exit(describe(error, stage, method))
+    logout(api)
+    print(json.dumps({'changed': changed}))
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except (ValueError, RuntimeError) as error:
-        # Messages are built from host names and API method names only, never from secrets.
-        sys.exit('Registration failed: ' + str(error))
-    except Exception:
-        sys.exit('Registration failed; no credentials logged. Review API/template compatibility and ownership.')
+    main()

@@ -229,6 +229,44 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(len(api.hosts), 15)
         self.assertFalse(registration.reconcile(api, hosts, tokens))
 
+    def run_main(self, fake_urlopen, secret):
+        settings = dict(mode='pilot', password=secret, proxmox={},
+                        hosts=[dict(name='zabbix01', ip='192.168.55.29', psk='ab' * 32)])
+        stderr = io.StringIO()
+        with patch.object(registration, 'urlopen', fake_urlopen), \
+             patch('sys.stdin', io.StringIO(__import__('json').dumps(settings))), \
+             patch('sys.stderr', stderr), self.assertRaises(SystemExit) as raised:
+            registration.main()
+        return str(raised.exception.code), stderr.getvalue()
+
+    def test_reconcile_error_survives_logout_failure_without_secrets(self):
+        secret = 'test-only-secret-' + 'ab' * 32
+        calls = []
+        def fake(request, timeout):
+            method = __import__('json').loads(request.data)['method']
+            calls.append(method)
+            if method == 'user.login':
+                return io.BytesIO(b'{"result": "session"}')
+            if method == 'template.get':
+                # Raw API error data must never be echoed.
+                body = {'error': {'code': -32602, 'data': secret}}
+                return io.BytesIO(__import__('json').dumps(body).encode())
+            raise registration.URLError('logout unavailable')
+        message, warnings = self.run_main(fake, secret)
+        self.assertEqual(message, 'Registration failed: stage=reconcile operation=template.get '
+                                  'category=api_error exception=APIError code=-32602')
+        self.assertEqual(calls[-1], 'user.logout')
+        self.assertIn('stage=logout', warnings)
+        self.assertNotIn(secret, message + warnings)
+        self.assertNotIn('ab' * 32, message + warnings)
+
+    def test_connection_error_reports_login_operation_and_type(self):
+        def fake(request, timeout):
+            raise registration.URLError('connection refused')
+        message, _ = self.run_main(fake, 'test-only-password')
+        self.assertEqual(message, 'Registration failed: stage=login operation=user.login '
+                                  'category=connection exception=URLError')
+
     def test_all_new_python_sources_compile_without_execution(self):
         for directory in ['zabbix_server', 'zabbix_registration', 'zabbix_local_access']:
             for path in (ROOT / 'ansible/roles' / directory).rglob('*.py'):
