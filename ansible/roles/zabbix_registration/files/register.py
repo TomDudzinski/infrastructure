@@ -118,8 +118,15 @@ def reconcile(api, hosts, proxmox):
 def main():
     settings = json.load(sys.stdin)
     hosts = settings['hosts']
-    if len(hosts) != 15 or len({h['name'] for h in hosts}) != 15 or len({h['ip'] for h in hosts}) != 15:
-        raise ValueError('Exactly 15 unique hosts and addresses are required')
+    pilot = settings.get('mode') == 'pilot'
+
+    if pilot:
+        if len(hosts) != 1 or hosts[0]['name'] != 'zabbix01':
+            raise ValueError('Pilot mode allows only zabbix01')
+    else:
+        if len(hosts) != 15 or len({h['name'] for h in hosts}) != 15 or len({h['ip'] for h in hosts}) != 15:
+            raise ValueError('Exactly 15 unique hosts and addresses are required')
+    
     import ipaddress
     import re
     for h in hosts:
@@ -127,8 +134,13 @@ def main():
             raise ValueError('Host outside LAN')
         if not re.fullmatch(r'(?:[0-9a-fA-F]{2}){16,256}', h['psk']):
             raise ValueError('Invalid PSK')
-    if set(settings['proxmox']) != {'dom', 'dtcode'}:
-        raise ValueError('Read-only Proxmox credentials for both hosts are required')
+    if pilot:
+        if settings.get('proxmox', {}) != {}:
+            raise ValueError('Pilot mode must not include Proxmox credentials')
+    else:
+        if set(settings['proxmox']) != {'dom', 'dtcode'}:
+            raise ValueError('Read-only Proxmox credentials for both hosts are required')
+    
     api = API('http://127.0.0.1:8080/api_jsonrpc.php', None)
     api.token = api('user.login', {'username': 'Admin', 'password': settings['password']})
     try:

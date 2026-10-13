@@ -6,7 +6,7 @@
 - name: Build host registration data using the existing inventory
   ansible.builtin.set_fact:
     zabbix_registration_hosts: "{{ zabbix_registration_hosts | default([]) + [{'name': item, 'ip': ('192.168.55.7' if item == 'iza' else hostvars[item].ansible_host), 'psk': vault_zabbix_psks[item]}] }}"
-  loop: "{{ groups['zabbix_agents'] }}"
+  loop: "{{ zabbix_registration_target_hosts | default(groups['zabbix_agents']) }}"
   no_log: true
 
 - name: Install API reconciler
@@ -18,7 +18,7 @@
 - name: Reconcile hosts with PSK and stock templates via loopback API
   ansible.builtin.command:
     argv: [python3, /usr/local/lib/zabbix-register.py]
-    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': vault_zabbix_proxmox_tokens} | to_json }}"
+    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode | default('full') == 'pilot' else vault_zabbix_proxmox_tokens), 'mode': zabbix_registration_mode | default('full')} | to_json }}"
   register: zabbix_registration_result
   changed_when: (zabbix_registration_result.stdout | from_json).changed
   no_log: true

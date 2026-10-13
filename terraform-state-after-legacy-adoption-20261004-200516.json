@@ -1,0 +1,2692 @@
+{
+  "version": 4,
+  "terraform_version": "1.15.8",
+  "serial": 35,
+  "lineage": "16e66910-fa3b-7fa6-b869-453b4f361576",
+  "outputs": {
+    "proxmox_versions": {
+      "value": {
+        "dom": {
+          "release": "9.2",
+          "repository_id": "b9984c6d90a4bd80",
+          "version": "9.2.2"
+        },
+        "dtcode": {
+          "release": "8.2",
+          "repository_id": "9355359cd7afbae4",
+          "version": "8.2.2"
+        }
+      },
+      "type": [
+        "object",
+        {
+          "dom": [
+            "object",
+            {
+              "release": "string",
+              "repository_id": "string",
+              "version": "string"
+            }
+          ],
+          "dtcode": [
+            "object",
+            {
+              "release": "string",
+              "repository_id": "string",
+              "version": "string"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "resources": [
+    {
+      "mode": "data",
+      "type": "proxmox_version",
+      "name": "dom",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "version",
+            "release": "9.2",
+            "repository_id": "b9984c6d90a4bd80",
+            "version": "9.2.2"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "mode": "data",
+      "type": "proxmox_version",
+      "name": "dtcode",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "version",
+            "release": "8.2",
+            "repository_id": "9355359cd7afbae4",
+            "version": "8.2.2"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_download_file",
+      "name": "dom_ubuntu_2404_cloud_image",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "checksum": "6e40c07ae715f744f84af0bec76415cc1987dd115b4b8de437818561f01a3733",
+            "checksum_algorithm": "sha256",
+            "content_type": "import",
+            "datastore_id": "local",
+            "decompression_algorithm": null,
+            "file_name": "ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+            "id": "local:import/ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+            "node_name": "dom",
+            "overwrite": false,
+            "overwrite_unmanaged": false,
+            "size": 624447488,
+            "upload_timeout": 600,
+            "url": "https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img",
+            "verify": true
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJvcmlnaW5hbF9zdGF0ZV9zaXplIjoiTmpJME5EUTNORGc0IiwidXJsX3NpemUiOiJOakkxTWpVMk9UWXcifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_container",
+      "name": "dns01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 2,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "Technitium DNS Server\n",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": [],
+                "path_in_datastore": "local-lvm:vm-102-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 20
+              }
+            ],
+            "environment_variables": {},
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": [],
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "102",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "dns01",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.10/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": []
+              }
+            ],
+            "ipv4": {},
+            "ipv6": {},
+            "memory": [
+              {
+                "dedicated": 2048,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr0",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:24:50:CB",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "dtcode",
+            "operating_system": [
+              {
+                "template_file_id": "",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [
+              {
+                "down_delay": -1,
+                "order": 1,
+                "up_delay": 20
+              }
+            ],
+            "tags": [
+              "dns",
+              "technitium",
+              "terraform"
+            ],
+            "template": false,
+            "timeout_clone": null,
+            "timeout_create": null,
+            "timeout_delete": null,
+            "timeout_start": null,
+            "timeout_update": null,
+            "unprivileged": true,
+            "vm_id": null,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "bao01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": true,
+                "type": "virtio",
+                "wait_for_ip": [
+                  {
+                    "disabled": true,
+                    "ipv4": false,
+                    "ipv6": false
+                  }
+                ]
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0"
+            ],
+            "cdrom": [],
+            "clone": [
+              {
+                "datastore_id": "local-lvm",
+                "full": true,
+                "node_name": "",
+                "retries": 3,
+                "vm_id": 101
+              }
+            ],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 2,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": false,
+            "description": "OpenBao secrets management server managed by Terraform and Ansible.",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-104-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 32,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": null,
+            "hostpci": [],
+            "hotplug": null,
+            "id": "104",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [
+                  {
+                    "domain": "home.lab",
+                    "servers": [
+                      "192.168.55.10"
+                    ]
+                  }
+                ],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.24/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoa1QmMpZklVuqEL07yyspQhDO/M8BaptJZ8O/wUkGk homelab-automation@iza",
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "**********",
+                    "username": "tom"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": null,
+            "mac_addresses": [],
+            "machine": null,
+            "memory": [
+              {
+                "dedicated": 2048,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "bao01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:B7:47:75",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dtcode",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "terraform-managed",
+            "protection": true,
+            "purge_on_destroy": false,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": true,
+            "tablet_device": true,
+            "tags": [
+              "openbao",
+              "secrets",
+              "security",
+              "terraform",
+              "ubuntu"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [
+              {
+                "clipboard": "",
+                "memory": 16,
+                "type": "serial0"
+              }
+            ],
+            "virtiofs": [],
+            "vm_id": 104,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "cloudflare01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": true,
+                "type": "virtio",
+                "wait_for_ip": [
+                  {
+                    "disabled": true,
+                    "ipv4": false,
+                    "ipv6": false
+                  }
+                ]
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": null,
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": false,
+            "description": "Central Cloudflare Tunnel gateway managed by Terraform and Ansible.",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "on",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "local:import/ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+                "interface": "scsi0",
+                "iothread": true,
+                "path_in_datastore": "vm-205-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 10,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "205",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [
+                  {
+                    "domain": "home.lab",
+                    "servers": [
+                      "192.168.55.10"
+                    ]
+                  }
+                ],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.28/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoa1QmMpZklVuqEL07yyspQhDO/M8BaptJZ8O/wUkGk homelab-automation@iza",
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "",
+                    "username": "tom"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1024,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "cloudflare01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:4F:AE:A4",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dom",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "terraform-managed",
+            "protection": true,
+            "purge_on_destroy": false,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "cloudflare",
+              "network",
+              "terraform",
+              "ubuntu"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [
+              {
+                "clipboard": "",
+                "memory": 16,
+                "type": "serial0"
+              }
+            ],
+            "virtiofs": [],
+            "vm_id": 205,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.dom_ubuntu_2404_cloud_image"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "forgejo01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "Forgejo Git Server",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-105-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 32,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "105",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.22/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "**********",
+                    "username": "ubuntu"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "192.168.55.22"
+              ],
+              [
+                "172.17.0.1"
+              ],
+              [
+                "172.18.0.1"
+              ],
+              []
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:feee:df8b"
+              ],
+              [],
+              [
+                "fe80::8041:ccff:fe07:1733"
+              ],
+              [
+                "fe80::786c:1eff:fe17:1b7"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:EE:DF:8B",
+              "D6:F8:8C:13:E8:68",
+              "82:41:CC:07:17:33",
+              "7A:6C:1E:17:01:B7"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1024,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "forgejo01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:EE:DF:8B",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0",
+              "docker0",
+              "br-a4e0a3281e08",
+              "veth48c3fd0"
+            ],
+            "node_name": "dtcode",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [
+              {
+                "down_delay": -1,
+                "order": 3,
+                "up_delay": 20
+              }
+            ],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "forgejo",
+              "git",
+              "terraform"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 105,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "grafana01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": true,
+                "type": "virtio",
+                "wait_for_ip": [
+                  {
+                    "disabled": true,
+                    "ipv4": false,
+                    "ipv6": false
+                  }
+                ]
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 2,
+                "flags": null,
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": false,
+            "description": "Grafana observability server managed by Terraform and Ansible.",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "on",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "local:import/ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+                "interface": "scsi0",
+                "iothread": true,
+                "path_in_datastore": "vm-204-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 30,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "204",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [
+                  {
+                    "domain": "home.lab",
+                    "servers": [
+                      "192.168.55.10"
+                    ]
+                  }
+                ],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.27/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoa1QmMpZklVuqEL07yyspQhDO/M8BaptJZ8O/wUkGk homelab-automation@iza",
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "",
+                    "username": "tom"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 4096,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "grafana01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:7B:76:6A",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dom",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "terraform-managed",
+            "protection": true,
+            "purge_on_destroy": false,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "grafana",
+              "observability",
+              "terraform",
+              "ubuntu"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [
+              {
+                "clipboard": "",
+                "memory": 16,
+                "type": "serial0"
+              }
+            ],
+            "virtiofs": [],
+            "vm_id": 204,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.dom_ubuntu_2404_cloud_image"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "home01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "Homepage Dashboard",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-103-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 32,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "103",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.20/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "**********",
+                    "username": "ubuntu"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1024,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "home01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:E4:03:16",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dtcode",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [
+              {
+                "down_delay": -1,
+                "order": 2,
+                "up_delay": 20
+              }
+            ],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "dashboard",
+              "homepage",
+              "terraform"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 103,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "langfuse01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": true,
+                "type": "virtio",
+                "wait_for_ip": [
+                  {
+                    "disabled": true,
+                    "ipv4": false,
+                    "ipv6": false
+                  }
+                ]
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 4,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": false,
+            "description": "Langfuse observability server managed by Terraform and Ansible.",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "on",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "local:import/ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+                "interface": "scsi0",
+                "iothread": true,
+                "path_in_datastore": "vm-203-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 100,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "203",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [
+                  {
+                    "domain": "home.lab",
+                    "servers": [
+                      "192.168.55.10"
+                    ]
+                  }
+                ],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.26/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoa1QmMpZklVuqEL07yyspQhDO/M8BaptJZ8O/wUkGk homelab-automation@iza",
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "",
+                    "username": "tom"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 16384,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "langfuse01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:89:89:7C",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dom",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "terraform-managed",
+            "protection": true,
+            "purge_on_destroy": false,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "langfuse",
+              "observability",
+              "terraform",
+              "ubuntu"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [
+              {
+                "clipboard": "",
+                "memory": 16,
+                "type": "serial0"
+              }
+            ],
+            "virtiofs": [],
+            "vm_id": 203,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.dom_ubuntu_2404_cloud_image"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "mysql01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": true,
+                "type": "virtio",
+                "wait_for_ip": [
+                  {
+                    "disabled": true,
+                    "ipv4": false,
+                    "ipv6": false
+                  }
+                ]
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 2,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": false,
+            "description": "MySQL database server managed by Terraform and Ansible.",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "on",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "local:import/ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+                "interface": "scsi0",
+                "iothread": true,
+                "path_in_datastore": "vm-201-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 64,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "201",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [
+                  {
+                    "domain": "home.lab",
+                    "servers": [
+                      "192.168.55.10"
+                    ]
+                  }
+                ],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.21/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoa1QmMpZklVuqEL07yyspQhDO/M8BaptJZ8O/wUkGk homelab-automation@iza",
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "",
+                    "username": "tom"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 4096,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "mysql01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:7B:18:00",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dom",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "terraform-managed",
+            "protection": true,
+            "purge_on_destroy": false,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "database",
+              "mysql",
+              "terraform",
+              "ubuntu"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [
+              {
+                "clipboard": "",
+                "memory": 16,
+                "type": "serial0"
+              }
+            ],
+            "virtiofs": [],
+            "vm_id": 201,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.dom_ubuntu_2404_cloud_image"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "npm01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "Nginx Proxy Manager",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-106-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 32,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "106",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.23/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "**********",
+                    "username": "ubuntu"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "192.168.55.23"
+              ],
+              [
+                "172.18.0.1"
+              ],
+              [
+                "172.17.0.1"
+              ],
+              []
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fede:634a"
+              ],
+              [
+                "fe80::84f3:bbff:fe07:3aa9"
+              ],
+              [],
+              [
+                "fe80::2cd1:b7ff:fe4c:9538"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:DE:63:4A",
+              "86:F3:BB:07:3A:A9",
+              "6A:F3:99:95:D1:8E",
+              "2E:D1:B7:4C:95:38"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1024,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "npm01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:DE:63:4A",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0",
+              "br-9af7ce7bf6aa",
+              "docker0",
+              "vethda1980e"
+            ],
+            "node_name": "dtcode",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [
+              {
+                "down_delay": -1,
+                "order": 1,
+                "up_delay": 20
+              }
+            ],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "nginx",
+              "proxy",
+              "ssl",
+              "terraform"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 106,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "qdrant01",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dom_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": true,
+                "type": "virtio",
+                "wait_for_ip": [
+                  {
+                    "disabled": true,
+                    "ipv4": false,
+                    "ipv6": false
+                  }
+                ]
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 2,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": false,
+            "description": "Qdrant vector database server managed by Terraform and Ansible.",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "on",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "local:import/ubuntu-24.04-server-cloudimg-amd64-20260814.qcow2",
+                "interface": "scsi0",
+                "iothread": true,
+                "path_in_datastore": "vm-202-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 20,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "202",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [
+                  {
+                    "domain": "home.lab",
+                    "servers": [
+                      "192.168.55.10"
+                    ]
+                  }
+                ],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.25/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoa1QmMpZklVuqEL07yyspQhDO/M8BaptJZ8O/wUkGk homelab-automation@iza",
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "",
+                    "username": "tom"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [],
+            "ipv6_addresses": [],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 2048,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "qdrant01",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:40:33:5F",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [],
+            "node_name": "dom",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "terraform-managed",
+            "protection": true,
+            "purge_on_destroy": false,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "database",
+              "qdrant",
+              "terraform",
+              "ubuntu",
+              "vector"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [
+              {
+                "clipboard": "",
+                "memory": 16,
+                "type": "serial0"
+              }
+            ],
+            "virtiofs": [],
+            "vm_id": 202,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.dom_ubuntu_2404_cloud_image"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "tailscale_router",
+      "provider": "provider[\"registry.terraform.io/bpg/proxmox\"].dtcode_manage",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "Tailscale VPN node",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-107-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 32,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "107",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "192.168.55.4/24",
+                        "gateway": "192.168.55.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKpoMH9ei8p2hJzDD8Vq3nm13nLQrRvCx548jln4zv2JvzS7WpItKtnDjEacQz+VczhffleYI8NYAKOo4gduBqfS93yOrLBlRctIYJd6XiaWZXyUcMhwv+F7824rJrF6FphRwcimnA4om+YF2BhKYFHP8MEsElOhnrPk7ur9iRa5fIgN9+wpgMbiOiGdgg7xg8QjqDSY+G+XqBBW6PxfZlIMbNyFNZEATZG5tg/daY84ISKUZBZAzslvso7xvd/UM2kW7w5Za1pf2alc4gI9jscH1RzznkNMW+O2SJJuXwKL7UhviUnyxdSD0W6EI8erZfem+pU9B94U7q/fpOUDLzyiSg9qSLjc0NPLfF12FBVqm04iTWTjTbDGLQ7AVt16FlLm2Rb8fD6htiw2+IPz+UtB9N028HjObgygWAfDEomMIKiQZ5ymBV2wtIwwbSeripdFoRyGGDIWuanIzk2YCBzFPe1NygF9SVtUVO6ZTPQU78u9YgFJqqmYtg/sNANa8= tomas@WINDELL-L5GONBM"
+                    ],
+                    "password": "**********",
+                    "username": "ubuntu"
+                  }
+                ],
+                "user_data_file_id": "",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "192.168.55.4"
+              ],
+              [
+                "100.64.196.43"
+              ]
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fe7e:16f"
+              ],
+              [
+                "fd7a:115c:a1e0::c239:c42c",
+                "fe80::fa4f:9b5b:ad6b:d35d"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:7E:01:6F",
+              "00:00:00:00:00:00"
+            ],
+            "machine": "",
+            "memory": [],
+            "migrate": false,
+            "name": "tailscale-router",
+            "network_device": [
+              {
+                "bridge": "vmbr0",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:7E:01:6F",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0",
+              "tailscale0"
+            ],
+            "node_name": "dtcode",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [
+              {
+                "type": "l26"
+              }
+            ],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [
+              {
+                "device": "socket"
+              }
+            ],
+            "smbios": [],
+            "started": true,
+            "startup": [
+              {
+                "down_delay": -1,
+                "order": 1,
+                "up_delay": 20
+              }
+            ],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [
+              "tailscale",
+              "terraform",
+              "vpn"
+            ],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 107,
+            "watchdog": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
+

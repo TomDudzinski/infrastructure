@@ -49,19 +49,50 @@
     fail_msg: Provision CA, certificate and readable private key separately; supply absolute paths.
   when: "'cert' in [zabbix_agent_tls_connect, zabbix_agent_tls_accept]"
 
+- name: Check availability of pinned Agent 2 version
+  ansible.builtin.command:
+    argv:
+      - apt-cache
+      - madison
+      - zabbix-agent2
+  register: zabbix_agent_available_versions
+  changed_when: false
+  check_mode: false
+
+- name: Determine whether repository bootstrap is required
+  ansible.builtin.set_fact:
+    zabbix_agent_repository_bootstrap_required: >-
+      {{
+        zabbix_agent_package_version
+        not in (
+          zabbix_agent_available_versions.stdout
+          | regex_findall('(?m)^\s*zabbix-agent2\s*\|\s*([^|]+?)\s*\|')
+          | map('trim')
+          | list
+        )
+      }}
+
+- name: Show repository bootstrap decision
+  ansible.builtin.debug:
+    msg: "Repository bootstrap required: {{ zabbix_agent_repository_bootstrap_required }}"
+
 - name: Download official release repository package
   ansible.builtin.get_url:
     url: "{{ zabbix_agent_repository_deb_url or ('https://repo.zabbix.com/zabbix/' + zabbix_agent_release + '/release/' + (ansible_distribution | lower) + '/pool/main/z/zabbix-release/zabbix-release_latest_' + zabbix_agent_release + '+' + (ansible_distribution | lower) + zabbix_agent_os_version + '_all.deb') }}"
     dest: /var/tmp/zabbix-agent-release.deb
     checksum: "{{ zabbix_agent_repository_deb_checksum or omit }}"
     mode: '0644'
-  when: not ansible_check_mode
+  when: 
+  - not ansible_check_mode
+  - zabbix_agent_repository_bootstrap_required
 
 - name: Install Zabbix repository definition
   ansible.builtin.apt:
     deb: /var/tmp/zabbix-agent-release.deb
   register: zabbix_agent_repository_install
-  when: not ansible_check_mode
+  when: 
+  - not ansible_check_mode
+  - zabbix_agent_repository_bootstrap_required
 
 - name: Install explicitly versioned Agent 2
   ansible.builtin.apt:
