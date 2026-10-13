@@ -24,7 +24,7 @@
 - name: Reconcile hosts with PSK and stock templates via loopback API
   ansible.builtin.command:
     argv: [python3, /usr/local/lib/zabbix-register.py]
-    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode == 'pilot' else vault_zabbix_proxmox_tokens), 'mode': zabbix_registration_mode} | to_json }}"
+    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode == 'pilot' else vault_zabbix_proxmox_tokens | default({})), 'mode': zabbix_registration_mode} | to_json }}"
   register: zabbix_registration_result
   changed_when: zabbix_registration_result.rc == 0 and (zabbix_registration_result.stdout | from_json).changed
   # Defer failure to the sanitized task below; the script never prints secrets to stderr.

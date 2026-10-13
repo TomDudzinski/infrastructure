@@ -237,6 +237,28 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(len(api.hosts), 15)
         self.assertFalse(registration.reconcile(api, hosts, tokens))
 
+    def test_full_mode_without_proxmox_tokens_keeps_existing_integration(self):
+        names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
+                 'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
+                 'grafana01', 'cloudflare01', 'zabbix01']
+        hosts = [dict(name=name, ip='192.168.55.' + str(index + 40), psk='ab' * 32)
+                 for index, name in enumerate(names)]
+        registration.validate(dict(mode='full', hosts=hosts, proxmox={}))
+        with self.assertRaises(ValueError):
+            registration.validate(dict(mode='full', hosts=hosts, proxmox={'iza': {}}))
+        api = FakeZabbix()
+        tokens = {'dom': dict(id='monitor@pve!zabbix', secret='test-only')}
+        self.assertTrue(registration.reconcile(api, hosts[:1], tokens))
+        # Without tokens: all hosts get the Linux template, nothing Proxmox-related is removed.
+        self.assertTrue(registration.reconcile(api, hosts, {}))
+        self.assertFalse(registration.reconcile(api, hosts, {}))
+        self.assertEqual(len(api.hosts), 15)
+        dom = api.hosts[0]
+        self.assertEqual({t['templateid'] for t in dom['parentTemplates']}, {'10', '11'})
+        self.assertEqual(len(dom['macros']), 4)
+        self.assertTrue(all({'templateid': '10'} in h['parentTemplates'] for h in api.hosts))
+        self.assertTrue(all(h['tls_connect'] == 2 for h in api.hosts))
+
     def run_main(self, fake_urlopen, secret):
         settings = dict(mode='pilot', password=secret, proxmox={},
                         hosts=[dict(name='zabbix01', ip='192.168.55.29', psk='ab' * 32)])

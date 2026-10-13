@@ -121,6 +121,7 @@ vault_zabbix_npm_password: <NPM-password>
 vault_zabbix_psks:
   dom: <unique-64-hex-characters>
   # Dodaj osobny klucz dla każdego z pozostałych 14 hostów.
+# Opcjonalne: bez tokenów dom/dtcode są monitorowane tylko przez Agent 2.
 vault_zabbix_proxmox_tokens:
   dom:
     id: <user@realm!readonly-token>
@@ -290,7 +291,7 @@ ansible-playbook playbooks/zabbix-agents.yml --limit 'zabbix_agents:!zabbix01' \
   --ask-become-pass --ask-vault-pass \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
   -e @/home/tom/.config/infrastructure/zabbix/vault.yml
-# Pełna rejestracja wszystkich 15 hostów (wymaga PSK wszystkich hostów i tokenów dom/dtcode):
+# Pełna rejestracja wszystkich 15 hostów (wymaga PSK wszystkich hostów; tokeny Proxmox opcjonalne):
 ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
   --ask-become-pass --ask-vault-pass \
   -e zabbix_registration_mode=full \

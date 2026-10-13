@@ -163,8 +163,9 @@ def validate(settings):
     elif mode == 'full':
         if len(hosts) != 15 or len({h['name'] for h in hosts}) != 15 or len({h['ip'] for h in hosts}) != 15:
             raise CheckFailed('Exactly 15 unique hosts and addresses are required')
-        if set(settings['proxmox']) != {'dom', 'dtcode'}:
-            raise CheckFailed('Read-only Proxmox credentials for both hosts are required')
+        # Proxmox API tokens are optional; without them dom/dtcode are monitored by Agent 2 only.
+        if not set(settings.get('proxmox') or {}) <= {'dom', 'dtcode'}:
+            raise CheckFailed('Proxmox credentials are allowed only for dom and dtcode')
     else:
         raise CheckFailed('Registration mode must be pilot or full')
     for h in hosts:
@@ -220,7 +221,7 @@ def main():
         api = API('http://127.0.0.1:8080/api_jsonrpc.php', None)
         api.token = api('user.login', {'username': 'Admin', 'password': settings['password']})
         stage = 'reconcile'
-        changed = reconcile(api, settings['hosts'], settings['proxmox'])
+        changed = reconcile(api, settings['hosts'], settings.get('proxmox') or {})
     except Exception as error:
         # Capture the failing operation before logout overwrites it.
         method = api.method if api else None
