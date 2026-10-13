@@ -1,6 +1,8 @@
 """Reconcile only owned Zabbix 7.0 hosts. Input secrets exclusively on stdin."""
 import hashlib
+import ipaddress
 import json
+import re
 import sys
 from urllib.request import Request, urlopen
 
@@ -18,6 +20,14 @@ class API:
         if 'error' in result:
             raise RuntimeError('Zabbix API rejected ' + method)
         return result['result']
+
+
+OWNER_TAG = {'tag': 'managed-by', 'value': 'infrastructure-zabbix'}
+
+
+def plain_tags(tags):
+    # Zabbix 7.0 adds read-only fields such as 'automatic'; compare and send only tag/value.
+    return [{'tag': t['tag'], 'value': t.get('value', '')} for t in tags if str(t.get('automatic', '0')) == '0']
 
 
 def reconcile(api, hosts, proxmox):
@@ -41,7 +51,7 @@ def reconcile(api, hosts, proxmox):
                               'selectTags': 'extend', 'selectMacros': 'extend'})
     existing = {h['host']: h for h in current}
     for h in current:
-        if {'tag': 'managed-by', 'value': 'infrastructure-zabbix'} not in h['tags']:
+        if OWNER_TAG not in plain_tags(h['tags']):
             raise ValueError('Existing unowned host needs explicit adoption: ' + h['host'])
     group_names = ['Homelab/Linux', 'Homelab/Proxmox']
     groups = api('hostgroup.get', {'output': ['groupid', 'name'], 'filter': {'name': group_names}})
@@ -68,8 +78,7 @@ def reconcile(api, hosts, proxmox):
                       {'macro': '{$PVE.TOKEN.SECRET}', 'value': credentials['secret'], 'type': '1'}]
             fingerprint_input += json.dumps(credentials, sort_keys=True)
         digest = hashlib.sha256(fingerprint_input.encode()).hexdigest()
-        tags = [{'tag': 'managed-by', 'value': 'infrastructure-zabbix'},
-                {'tag': 'credentials-sha256', 'value': digest}]
+        tags = [OWNER_TAG, {'tag': 'credentials-sha256', 'value': digest}]
         interface = dict(type=1, main=1, useip=1, ip=ip, dns='', port='10050')
         payload = dict(host=name, groups=[{'groupid': x} for x in sorted(desired_groups)],
                        templates=[{'templateid': x} for x in sorted(desired_templates)],
@@ -87,7 +96,8 @@ def reconcile(api, hosts, proxmox):
             raise ValueError('Expected exactly one main agent interface: ' + name)
         actual = interfaces[0]
         interface_changed = any(str(actual[k]) != str(v) for k, v in interface.items())
-        credentials_changed = tags[1] not in old['tags']
+        old_tags = plain_tags(old['tags'])
+        credentials_changed = tags[1] not in old_tags
         macro_values = {m['macro']: m['value'] for m in old['macros']}
         macro_changed = any(m['macro'] not in macro_values or (m.get('type') != '1' and macro_values[m['macro']] != m['value']) for m in macros)
         tls_changed = (str(old['tls_connect']) != '2' or str(old['tls_accept']) != '2'
@@ -97,7 +107,7 @@ def reconcile(api, hosts, proxmox):
             payload['hostid'] = old['hostid']
             payload['groups'] = [{'groupid': x} for x in sorted(old_groups | desired_groups)]
             payload['templates'] = [{'templateid': x} for x in sorted(old_templates | desired_templates)]
-            payload['tags'] = [t for t in old['tags'] if t['tag'] not in ('managed-by', 'credentials-sha256')] + tags
+            payload['tags'] = [t for t in old_tags if t['tag'] not in ('managed-by', 'credentials-sha256')] + tags
             if macros and (credentials_changed or macro_changed):
                 # Never send unrelated masked secret macros back to the API.
                 old_macros = {m['macro']: m for m in old['macros']}
@@ -115,36 +125,35 @@ def reconcile(api, hosts, proxmox):
     return changed
 
 
-def main():
-    settings = json.load(sys.stdin)
+def validate(settings):
     hosts = settings['hosts']
-    pilot = settings.get('mode') == 'pilot'
-
-    if pilot:
+    mode = settings.get('mode')
+    if mode == 'pilot':
         if len(hosts) != 1 or hosts[0]['name'] != 'zabbix01':
             raise ValueError('Pilot mode allows only zabbix01')
-    else:
+        if settings.get('proxmox') != {}:
+            raise ValueError('Pilot mode must not include Proxmox credentials')
+    elif mode == 'full':
         if len(hosts) != 15 or len({h['name'] for h in hosts}) != 15 or len({h['ip'] for h in hosts}) != 15:
             raise ValueError('Exactly 15 unique hosts and addresses are required')
-    
-    import ipaddress
-    import re
-    for h in hosts:
-        if ipaddress.ip_address(h['ip']) not in ipaddress.ip_network('192.168.55.0/24') or h['ip'] in ('192.168.55.0', '192.168.55.255'):
-            raise ValueError('Host outside LAN')
-        if not re.fullmatch(r'(?:[0-9a-fA-F]{2}){16,256}', h['psk']):
-            raise ValueError('Invalid PSK')
-    if pilot:
-        if settings.get('proxmox', {}) != {}:
-            raise ValueError('Pilot mode must not include Proxmox credentials')
-    else:
         if set(settings['proxmox']) != {'dom', 'dtcode'}:
             raise ValueError('Read-only Proxmox credentials for both hosts are required')
-    
+    else:
+        raise ValueError('Registration mode must be pilot or full')
+    for h in hosts:
+        if ipaddress.ip_address(h['ip']) not in ipaddress.ip_network('192.168.55.0/24') or h['ip'] in ('192.168.55.0', '192.168.55.255'):
+            raise ValueError('Host outside LAN: ' + h['name'])
+        if not re.fullmatch(r'(?:[0-9a-fA-F]{2}){16,256}', h['psk']):
+            raise ValueError('Invalid PSK: ' + h['name'])
+
+
+def main():
+    settings = json.load(sys.stdin)
+    validate(settings)
     api = API('http://127.0.0.1:8080/api_jsonrpc.php', None)
     api.token = api('user.login', {'username': 'Admin', 'password': settings['password']})
     try:
-        print(json.dumps({'changed': reconcile(api, hosts, settings['proxmox'])}))
+        print(json.dumps({'changed': reconcile(api, settings['hosts'], settings['proxmox'])}))
     finally:
         api('user.logout', [])
 
@@ -152,5 +161,8 @@ def main():
 if __name__ == '__main__':
     try:
         main()
+    except (ValueError, RuntimeError) as error:
+        # Messages are built from host names and API method names only, never from secrets.
+        sys.exit('Registration failed: ' + str(error))
     except Exception:
         sys.exit('Registration failed; no credentials logged. Review API/template compatibility and ownership.')

@@ -1,12 +1,18 @@
 ---
+- name: Require an explicit registration mode
+  ansible.builtin.assert:
+    that:
+      - zabbix_registration_mode | default('') in ['pilot', 'full']
+    fail_msg: Set -e zabbix_registration_mode=pilot (zabbix01 only) or full (all zabbix_agents).
+
 - name: Reset transient host registration data for repeated role execution
   ansible.builtin.set_fact:
     zabbix_registration_hosts: []
 
 - name: Build host registration data using the existing inventory
   ansible.builtin.set_fact:
-    zabbix_registration_hosts: "{{ zabbix_registration_hosts | default([]) + [{'name': item, 'ip': ('192.168.55.7' if item == 'iza' else hostvars[item].ansible_host), 'psk': vault_zabbix_psks[item]}] }}"
-  loop: "{{ zabbix_registration_target_hosts | default(groups['zabbix_agents']) }}"
+    zabbix_registration_hosts: "{{ zabbix_registration_hosts + [{'name': item, 'ip': hostvars[item].zabbix_agent_ip | default(hostvars[item].ansible_host), 'psk': vault_zabbix_psks[item]}] }}"
+  loop: "{{ ['zabbix01'] if zabbix_registration_mode == 'pilot' else groups['zabbix_agents'] }}"
   no_log: true
 
 - name: Install API reconciler
@@ -18,9 +24,18 @@
 - name: Reconcile hosts with PSK and stock templates via loopback API
   ansible.builtin.command:
     argv: [python3, /usr/local/lib/zabbix-register.py]
-    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode | default('full') == 'pilot' else vault_zabbix_proxmox_tokens), 'mode': zabbix_registration_mode | default('full')} | to_json }}"
+    stdin: "{{ {'hosts': zabbix_registration_hosts, 'password': vault_zabbix_admin_password, 'proxmox': ({} if zabbix_registration_mode == 'pilot' else vault_zabbix_proxmox_tokens), 'mode': zabbix_registration_mode} | to_json }}"
   register: zabbix_registration_result
-  changed_when: (zabbix_registration_result.stdout | from_json).changed
+  changed_when: zabbix_registration_result.rc == 0 and (zabbix_registration_result.stdout | from_json).changed
+  # Defer failure to the sanitized task below; the script never prints secrets to stderr.
+  failed_when: false
   no_log: true
   diff: false
   when: not ansible_check_mode
+
+- name: Report sanitized registration failure
+  ansible.builtin.fail:
+    msg: "{{ zabbix_registration_result.stderr_lines | last | default('Registration failed without diagnostic output') }}"
+  when:
+    - not ansible_check_mode
+    - zabbix_registration_result.rc != 0
