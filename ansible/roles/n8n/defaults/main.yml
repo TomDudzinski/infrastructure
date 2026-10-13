@@ -1,0 +1,24 @@
+---
+n8n_install_dir: /opt/n8n
+n8n_data_dir: "{{ n8n_install_dir }}/data"
+n8n_postgres_data_dir: "{{ n8n_install_dir }}/postgres"
+n8n_backup_dir: "{{ n8n_install_dir }}/backups"
+
+# Stable channel on 2026-10-13 (2.44.0 was beta); PostgreSQL 17 latest patch.
+n8n_image: docker.n8n.io/n8nio/n8n:2.43.4
+n8n_postgres_image: docker.io/library/postgres:17.11
+
+# Container users: node (n8n image) and postgres (official image).
+n8n_uid: 1000
+n8n_postgres_uid: 999
+
+# LAN port for NPM (npm01) and cloudflared (cloudflare01); PostgreSQL is not published.
+n8n_port: 5678
+n8n_timezone: Europe/Warsaw
+
+n8n_postgres_db: n8n
+n8n_postgres_user: n8n
+
+# Set in host_vars; the role refuses to run without them.
+n8n_editor_url: null
+n8n_webhook_url: null

@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: {{ n8n_postgres_image }}
+    container_name: n8n-postgres
+    restart: unless-stopped
+    # No published ports: reachable only from n8n on the internal Compose network.
+    env_file:
+      - postgres.env
+    environment:
+      POSTGRES_USER: "{{ n8n_postgres_user }}"
+      POSTGRES_DB: "{{ n8n_postgres_db }}"
+      TZ: "{{ n8n_timezone }}"
+      PGTZ: "{{ n8n_timezone }}"
+    volumes:
+      - {{ n8n_postgres_data_dir }}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ n8n_postgres_user }} -d {{ n8n_postgres_db }}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    image: {{ n8n_image }}
+    container_name: n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # LAN port for NPM (editor) and cloudflared (webhooks); no router port forwarding.
+    ports:
+      - "{{ n8n_port }}:5678"
+
+    env_file:
+      - n8n.env
+
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: "5432"
+      DB_POSTGRESDB_DATABASE: "{{ n8n_postgres_db }}"
+      DB_POSTGRESDB_USER: "{{ n8n_postgres_user }}"
+      # Private editor; also the OAuth2 redirect base (<editor>/rest/oauth2-credential/callback).
+      N8N_HOST: "{{ n8n_editor_url | urlsplit('hostname') }}"
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: https
+      N8N_EDITOR_BASE_URL: "{{ n8n_editor_url }}"
+      # Successor of the deprecated WEBHOOK_URL; base for production and test webhook URLs.
+      N8N_WEBHOOK_URL: "{{ n8n_webhook_url }}"
+      # OAuth2 callbacks require the editor session (n8n 2.x default, set explicitly)
+      # and the browser that started the flow.
+      N8N_SKIP_AUTH_ON_OAUTH_CALLBACK: "false"
+      N8N_OAUTH_BROWSER_BINDING: "true"
+      # One proxy in front: NPM (editor) or cloudflared (webhooks).
+      N8N_PROXY_HOPS: "1"
+      GENERIC_TIMEZONE: "{{ n8n_timezone }}"
+      TZ: "{{ n8n_timezone }}"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+
+    volumes:
+      - {{ n8n_data_dir }}:/home/node/.n8n

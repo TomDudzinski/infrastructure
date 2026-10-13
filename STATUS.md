@@ -421,3 +421,18 @@ Trasa Cloudflare Tunnel jest krokiem ręcznym (konfiguracja tunelu poza repozyto
 Testy offline: 114 przeszło (1 pominięty); Terraform/Ansible niedostępne lokalnie.
 **Nie wdrożono i nie zweryfikowano w infrastrukturze.**
 [Procedura](docs/vms/webui01.md).
+
+## n8n01 / n8n — przygotowanie lokalne (2026-10-13)
+
+Dodano `terraform/dom_n8n01.tf` (wyłączony domyślnie, VMID do zatwierdzenia),
+rolę `n8n` (n8n + PostgreSQL, sekrety w plikach env `0600` z Ansible Vault),
+playbook `n8n01-bootstrap.yml`, `n8n01` w `automation_servers` i `zabbix_agents`.
+Rejestracja Zabbix w trybie `single` (tylko `n8n01`). OAuth2: edytor i callback
+`https://authn8n.tdcode.pl` (tylko DNS wewnętrzny i Tailscale, bez trasy publicznej;
+n8n 2.43.4 buduje redirect URI z `N8N_EDITOR_BASE_URL` i wymaga sesji na callbacku),
+webhooki `N8N_WEBHOOK_URL=https://webhookn8n.tdcode.pl/`. NPM, DNS, certyfikat
+DNS-01 i Cloudflare Tunnel (tylko `^/webhook/`) są krokami ręcznymi
+(konfiguracja poza repozytorium). Testy offline: 122 przeszło (3 pominięte);
+Terraform/Ansible/Docker niedostępne lokalnie.
+**Nie wdrożono i nie zweryfikowano w infrastrukturze.**
+[Procedura](docs/vms/n8n01.md).

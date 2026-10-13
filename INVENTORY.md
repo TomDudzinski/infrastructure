@@ -289,3 +289,15 @@ istniejący Cloudflare Tunnel (`cloudflare01`), połączenia LAN do Ollamy i
 `db-agent-mvp` na `iza`. Dodano do grup `webui_servers` i `zabbix_agents` (16 hostów).
 Domyślny język interfejsu: `pl-PL`. Istniejący Open WebUI na `iza` bez zmian. **Kod przygotowany, nie wdrożono.**
 [Opis i procedura](docs/vms/webui01.md).
+
+## n8n01 — przygotowanie lokalne (2026-10-13)
+
+Planowana VM `n8n01` na `dom`: `192.168.55.31`, 2 vCPU, 4 GiB RAM, 32 GiB,
+VMID do zatwierdzenia (Terraform domyślnie jej nie tworzy). n8n `2.43.4` +
+PostgreSQL `17.11` w Docker Compose, dane w `/opt/n8n/data` i `/opt/n8n/postgres`.
+Edytor prywatny i callback OAuth2 `https://authn8n.tdcode.pl` (NPM, DNS tylko wewnętrzny,
+LAN + Tailscale; `n8n.home.lab` przekierowuje), publiczne webhooki
+`https://webhookn8n.tdcode.pl/webhook/*` przez istniejący Cloudflare Tunnel (`cloudflare01`).
+Dodano do grup `automation_servers` i `zabbix_agents` (17 hostów).
+**Kod przygotowany, nie wdrożono.**
+[Opis i procedura](docs/vms/n8n01.md).

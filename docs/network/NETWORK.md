@@ -39,6 +39,7 @@ Reconciled on `2026-10-04` using local documentation and source code only. Exist
 | `192.168.55.27` | `grafana01` | VM | Observability | Current code; deployment unconfirmed |
 | `192.168.55.28` | `cloudflare01` | VM | Tunnel gateway | Current code; deployment unconfirmed |
 | `192.168.55.30` | `webui01` | VM | Open WebUI (public via Cloudflare Tunnel) | Planned; code only, not deployed |
+| `192.168.55.31` | `n8n01` | VM | n8n (private editor/OAuth2 callback `authn8n.tdcode.pl` via NPM, internal DNS only; public `webhookn8n.tdcode.pl/webhook/*` via Cloudflare Tunnel) | Planned; code only, not deployed |
 
 ## Recovered legacy network configuration
 

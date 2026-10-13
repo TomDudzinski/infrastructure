@@ -1,0 +1,78 @@
+---
+- name: Require URLs and strong secrets
+  ansible.builtin.assert:
+    that:
+      - n8n_editor_url is string
+      - n8n_editor_url is match('^https://[a-z0-9.-]+/$')
+      - n8n_webhook_url is string
+      - n8n_webhook_url is match('^https://[a-z0-9.-]+/$')
+      - n8n_editor_url | urlsplit('hostname') != n8n_webhook_url | urlsplit('hostname')
+      - vault_n8n_postgres_password is defined
+      - vault_n8n_postgres_password is match('^[A-Za-z0-9]{32,}$')
+      - vault_n8n_encryption_key is defined
+      - vault_n8n_encryption_key is match('^[A-Za-z0-9]{32,}$')
+    fail_msg: Set n8n_editor_url/n8n_webhook_url (https://.../) and Vault secrets vault_n8n_postgres_password (>= 32 alphanumeric) and vault_n8n_encryption_key (>= 32 alphanumeric).
+    quiet: true
+  no_log: true
+
+- name: Create n8n project directory
+  ansible.builtin.file:
+    path: "{{ n8n_install_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create n8n application data directory
+  ansible.builtin.file:
+    path: "{{ n8n_data_dir }}"
+    state: directory
+    owner: "{{ n8n_uid }}"
+    group: "{{ n8n_uid }}"
+    mode: "0700"
+
+- name: Create PostgreSQL data directory
+  ansible.builtin.file:
+    path: "{{ n8n_postgres_data_dir }}"
+    state: directory
+    owner: "{{ n8n_postgres_uid }}"
+    group: "{{ n8n_postgres_uid }}"
+    mode: "0700"
+
+# Target for manual pg_dump runs from the host (see docs/vms/n8n01.md).
+- name: Create local database dump directory
+  ansible.builtin.file:
+    path: "{{ n8n_backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Deploy n8n Docker Compose
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ n8n_install_dir }}/compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy n8n secret environment files
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ n8n_install_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - n8n.env
+    - postgres.env
+  no_log: true
+  diff: false
+
+- name: Start n8n stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ n8n_install_dir }}"
+    files:
+      - compose.yml
+    state: present
+    pull: missing
