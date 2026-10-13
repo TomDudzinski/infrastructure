@@ -1,0 +1,18 @@
+---
+open_webui_install_dir: /opt/open-webui
+open_webui_data_dir: "{{ open_webui_install_dir }}/data"
+# Same pinned version as the existing instance on iza (compose/open-webui/compose.yaml).
+open_webui_image: ghcr.io/open-webui/open-webui:v0.11.0
+open_webui_port: 3000
+
+# Public HTTPS URL served through the existing Cloudflare Tunnel; set in host_vars.
+open_webui_public_url: null
+
+# LAN-only backends on iza; neither is published through Cloudflare.
+open_webui_ollama_base_url: "http://192.168.55.7:11434"
+# db-agent-mvp OpenAI-compatible adapter (model db-agent); the backend requires no API key.
+open_webui_openai_base_url: "http://192.168.55.7:8000/v1"
+
+open_webui_whisper_language: pl
+# Default UI language (Open WebUI locale code); stored in the database at first start.
+open_webui_default_locale: pl-PL

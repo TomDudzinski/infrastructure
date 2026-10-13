@@ -56,9 +56,10 @@ ACL musi obowiązywać także w `location /`, bez nadrzędnego `allow all` w inc
 Przed publikacją sprawdź odmowę dostępu spoza LAN (także IPv6); jeśli NPM danej
 wersji nadpisuje ACL, nie publikuj trasy, dopasuj integrację po przeglądzie.
 
-Rola `zabbix_agent` pozostaje istniejącą implementacją. Grupa ma 15 hostów:
+Rola `zabbix_agent` pozostaje istniejącą implementacją. Grupa ma 16 hostów:
 `dom`, `dtcode`, `iza`, `dns01`, `home01`, `forgejo01`, `npm01`, `tailscale-router`,
-`mysql01`, `bao01`, `qdrant01`, `langfuse01`, `grafana01`, `cloudflare01`, `zabbix01`.
+`mysql01`, `bao01`, `qdrant01`, `langfuse01`, `grafana01`, `cloudflare01`, `webui01`, `zabbix01`.
+`webui01` dodano 2026-10-13 ([procedura](../vms/webui01.md)); tryb `full` wymaga dokładnie 16 hostów.
 Wszyscy używają indywidualnych PSK i szablonu `Linux by Zabbix agent active`.
 Proxmox dodatkowo otrzymuje `Proxmox VE by HTTP` oraz istniejące lub osobno
 zatwierdzone tokeny **tylko do odczytu**, z uprawnieniami potrzebnymi temu szablonowi.
@@ -83,7 +84,7 @@ na odpowiednich hostach. Dostęp WWW przez HTTP nie szyfruje logowania w LAN.
   administratora; dostępności pakietów i checksum nie sprawdzano przez sieć).
 - Ubuntu 26.04 na `iza`: oficjalne repozytorium 7.0 (`resolute`) zawiera
   `1:7.0.31-1+ubuntu26.04` (sprawdzone 2026-10-13); rola używa domyślnego URL.
-  Nie podstawiaj repozytorium 24.04. Nie deklaruj ukończenia wszystkich 15 hostów
+  Nie podstawiaj repozytorium 24.04. Nie deklaruj ukończenia wszystkich 16 hostów
   przy pominięciu iza.
 - Kontrakty API zainstalowanych Technitium i NPM: endpointy użyte w `access.py`,
   odpowiedzi `zone.type=Primary`, `records[].rData.ipAddress`, pola proxy hostów,
@@ -120,7 +121,7 @@ vault_zabbix_npm_identity: <NPM-account>
 vault_zabbix_npm_password: <NPM-password>
 vault_zabbix_psks:
   dom: <unique-64-hex-characters>
-  # Dodaj osobny klucz dla każdego z pozostałych 14 hostów.
+  # Dodaj osobny klucz dla każdego z pozostałych 15 hostów (w tym webui01).
 # Opcjonalne: bez tokenów dom/dtcode są monitorowane tylko przez Agent 2.
 vault_zabbix_proxmox_tokens:
   dom:
@@ -291,7 +292,7 @@ ansible-playbook playbooks/zabbix-agents.yml --limit 'zabbix_agents:!zabbix01' \
   --ask-become-pass --ask-vault-pass \
   -e @/home/tom/.config/infrastructure/zabbix/settings.yml \
   -e @/home/tom/.config/infrastructure/zabbix/vault.yml
-# Pełna rejestracja wszystkich 15 hostów (wymaga PSK wszystkich hostów; tokeny Proxmox opcjonalne):
+# Pełna rejestracja wszystkich 16 hostów (wymaga PSK wszystkich hostów; tokeny Proxmox opcjonalne):
 ansible-playbook playbooks/zabbix-register.yml --limit zabbix01 \
   --ask-become-pass --ask-vault-pass \
   -e zabbix_registration_mode=full \
@@ -314,14 +315,14 @@ ssh -t tom@192.168.55.29 'systemctl is-active zabbix-server zabbix-agent2 \
 
 W panelu: Monitoring → Hosts → `zabbix01` — dostępność ZBX (aktywne, zielona),
 Latest data z ostatnich minut (np. `system.uptime`, CPU). Po pełnej rejestracji
-to samo dla 15 hostów oraz dane szablonu `Proxmox VE by HTTP` dla `dom` i `dtcode`.
+to samo dla 16 hostów oraz dane szablonu `Proxmox VE by HTTP` dla `dom` i `dtcode`.
 
 Serwer i integracje API wymagają realnego wykonania; `--check` nie symuluje pełnej
 instalacji ani zapisów API. Dla agentów pozostaje opisana wcześniej ograniczona
 obsługa check mode. Po wdrożeniu powtórz cztery etapy Ansible z tymi samymi
 parametrami: konfiguracja, schema i rejestracja nie powinny wykazywać zmian.
 Sprawdź z iza: `getent hosts zabbix.home.lab`, `curl -I http://zabbix.home.lab`,
-15 hostów w panelu, dane aktywnych agentów, PSK, metryki Proxmox i odmowę dostępu
+16 hostów w panelu, dane aktywnych agentów, PSK, metryki Proxmox i odmowę dostępu
 spoza LAN. Zweryfikuj `nginx -t`, stan usług i logi na nowej VM oraz ACL NPM.
 Zapisz rzeczywiste wyniki w STATUS/INVENTORY dopiero po wykonaniu. Kopia bazy,
 konfiguracji i zaszyfrowanych sekretów jest warunkiem odtwarzania; nie kasuj bazy

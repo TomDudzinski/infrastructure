@@ -1,0 +1,21 @@
+---
+- name: Bootstrap webui01
+  hosts: webui01
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Require execution from iza with an explicit scope
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+          - ansible_limit | default('') | length > 0
+        fail_msg: Run only on iza with --limit webui01.
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+  roles:
+    - role: qemu_guest_agent
+    - role: docker_host
+    - role: open_webui

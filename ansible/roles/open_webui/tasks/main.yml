@@ -1,0 +1,47 @@
+---
+- name: Require approved public URL and a strong session secret
+  ansible.builtin.assert:
+    that:
+      - open_webui_public_url is string
+      - open_webui_public_url is match('^https://[a-z0-9.-]+$')
+      - vault_open_webui_secret_key is defined
+      - vault_open_webui_secret_key | length >= 32
+    fail_msg: Set open_webui_public_url (https://...) and vault_open_webui_secret_key (Ansible Vault, >= 32 characters).
+    quiet: true
+  no_log: true
+
+- name: Create Open WebUI directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: tom
+    group: tom
+    mode: "0755"
+  loop:
+    - "{{ open_webui_install_dir }}"
+    - "{{ open_webui_data_dir }}"
+
+- name: Deploy Open WebUI Docker Compose
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ open_webui_install_dir }}/compose.yml"
+    owner: tom
+    group: tom
+    mode: "0644"
+
+- name: Deploy Open WebUI environment
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ open_webui_install_dir }}/.env"
+    owner: tom
+    group: tom
+    mode: "0600"
+  no_log: true
+
+- name: Start Open WebUI
+  community.docker.docker_compose_v2:
+    project_src: "{{ open_webui_install_dir }}"
+    files:
+      - compose.yml
+    state: present
+    pull: missing

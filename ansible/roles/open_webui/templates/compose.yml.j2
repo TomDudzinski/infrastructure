@@ -1,0 +1,33 @@
+services:
+  open-webui:
+    image: {{ open_webui_image }}
+    container_name: open-webui
+    restart: unless-stopped
+
+    # LAN port for cloudflared on cloudflare01; no router port forwarding.
+    ports:
+      - "{{ open_webui_port }}:8080"
+
+    env_file:
+      - .env
+
+    environment:
+      WEBUI_URL: "{{ open_webui_public_url }}"
+      WEBUI_AUTH: "true"
+      # Only the first (admin) account may sign up; create it over LAN before publishing.
+      ENABLE_SIGNUP: "false"
+      ENABLE_INITIAL_ADMIN_SIGNUP: "true"
+      DEFAULT_USER_ROLE: pending
+      OLLAMA_BASE_URL: "{{ open_webui_ollama_base_url }}"
+      ENABLE_OPENAI_API: "true"
+      OPENAI_API_BASE_URLS: "{{ open_webui_openai_base_url }}"
+      # db-agent-mvp has no API key; Open WebUI expects one entry per base URL.
+      OPENAI_API_KEYS: "none"
+      # Sends X-OpenWebUI-Chat-Id, used by db-agent-mvp for multi-turn conversations.
+      ENABLE_FORWARD_USER_INFO_HEADERS: "true"
+      # Default only: a language chosen in user settings is kept per browser.
+      DEFAULT_LOCALE: "{{ open_webui_default_locale }}"
+      WHISPER_LANGUAGE: "{{ open_webui_whisper_language }}"
+
+    volumes:
+      - {{ open_webui_data_dir }}:/app/backend/data

@@ -410,3 +410,14 @@ adres `iza` w `host_vars` oraz przywrócone ustawienia `sudo.ws` dla `iza`.
 Procedura: [Zabbix](docs/monitoring/zabbix-deployment.md), sekcja „2–5“.
 Testy offline Zabbix: 36 (3 pominięte); Ansible niedostępny lokalnie.
 **Nie wdrożono i nie zweryfikowano w infrastrukturze.**
+
+## webui01 / Open WebUI — przygotowanie lokalne (2026-10-13)
+
+Dodano `terraform/dom_webui01.tf` (wyłączony domyślnie, VMID do zatwierdzenia),
+rolę `open_webui`, playbook `webui01-bootstrap.yml`, `webui01` w `zabbix_agents`
+oraz rejestrację Zabbix w trybie `full` dla 16 hostów (walidacja PSK bez zmian).
+Agent `db-agent-mvp` jest podłączany przez istniejący endpoint `/v1` bez adaptera.
+Trasa Cloudflare Tunnel jest krokiem ręcznym (konfiguracja tunelu poza repozytorium).
+Testy offline: 114 przeszło (1 pominięty); Terraform/Ansible niedostępne lokalnie.
+**Nie wdrożono i nie zweryfikowano w infrastrukturze.**
+[Procedura](docs/vms/webui01.md).

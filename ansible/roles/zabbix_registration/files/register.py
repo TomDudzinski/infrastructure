@@ -42,6 +42,8 @@ class API:
 progress = {'step': 'none'}
 
 OWNER_TAG = {'tag': 'managed-by', 'value': 'infrastructure-zabbix'}
+# Size of the zabbix_agents inventory group; full mode refuses any other host count.
+FULL_HOST_COUNT = 16
 
 
 def plain_tags(tags):
@@ -161,8 +163,9 @@ def validate(settings):
         if settings.get('proxmox') != {}:
             raise CheckFailed('Pilot mode must not include Proxmox credentials')
     elif mode == 'full':
-        if len(hosts) != 15 or len({h['name'] for h in hosts}) != 15 or len({h['ip'] for h in hosts}) != 15:
-            raise CheckFailed('Exactly 15 unique hosts and addresses are required')
+        if len(hosts) != FULL_HOST_COUNT or len({h['name'] for h in hosts}) != FULL_HOST_COUNT \
+                or len({h['ip'] for h in hosts}) != FULL_HOST_COUNT:
+            raise CheckFailed('Exactly %d unique hosts and addresses are required' % FULL_HOST_COUNT)
         # Proxmox API tokens are optional; without them dom/dtcode are monitored by Agent 2 only.
         if not set(settings.get('proxmox') or {}) <= {'dom', 'dtcode'}:
             raise CheckFailed('Proxmox credentials are allowed only for dom and dtcode')

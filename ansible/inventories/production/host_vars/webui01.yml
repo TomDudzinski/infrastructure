@@ -1,0 +1,4 @@
+---
+# Approved public hostname in the existing Cloudflare Tunnel, e.g. https://chat.example.com.
+# The role refuses to run until this is set.
+open_webui_public_url: null

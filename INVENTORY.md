@@ -279,3 +279,13 @@ zapisano jako `null`. Zabbix pozostaje w zakresie istniejącej, niezmienionej ro
 `zabbix_local_access`; katalog nie steruje jej wykonaniem ani istniejącymi trasami.
 Wykonano wyłącznie walidację i testy offline, bez wdrożenia.
 Źródła danych, niejasności i komendy testów: [dokumentacja Ansible](ansible/README.md#central-service-catalogue--stage-1-offline-only).
+
+## webui01 — przygotowanie lokalne (2026-10-13)
+
+Planowana VM `webui01` na `dom`: `192.168.55.30`, 4 vCPU, 8 GiB RAM, 40 GiB,
+VMID do zatwierdzenia (Terraform domyślnie jej nie tworzy). Open WebUI `v0.11.0`
+w Docker Compose, dane w `/opt/open-webui/data`, publikacja wyłącznie przez
+istniejący Cloudflare Tunnel (`cloudflare01`), połączenia LAN do Ollamy i
+`db-agent-mvp` na `iza`. Dodano do grup `webui_servers` i `zabbix_agents` (16 hostów).
+Domyślny język interfejsu: `pl-PL`. Istniejący Open WebUI na `iza` bez zmian. **Kod przygotowany, nie wdrożono.**
+[Opis i procedura](docs/vms/webui01.md).

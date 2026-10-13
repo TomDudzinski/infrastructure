@@ -189,18 +189,18 @@ class DeploymentTests(unittest.TestCase):
                 if len(users) != 1:
                     self.assertNotIn('user.update', calls)
 
-    def test_all_fifteen_hosts_repeat_without_duplicate_hosts(self):
+    def test_all_sixteen_hosts_repeat_without_duplicate_hosts(self):
         api = FakeZabbix()
         names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
                  'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
-                 'grafana01', 'cloudflare01', 'zabbix01']
+                 'grafana01', 'cloudflare01', 'webui01', 'zabbix01']
         hosts = [dict(name=name, ip='192.168.55.' + str(index + 40), psk='ab' * 32)
                  for index, name in enumerate(names)]
         tokens = {name: dict(id='monitor@pve!zabbix', secret='test-only') for name in ['dom', 'dtcode']}
         self.assertTrue(registration.reconcile(api, hosts, tokens))
-        self.assertEqual(len(api.hosts), 15)
+        self.assertEqual(len(api.hosts), 16)
         self.assertFalse(registration.reconcile(api, hosts, tokens))
-        self.assertEqual(len(api.hosts), 15)
+        self.assertEqual(len(api.hosts), 16)
 
     def test_api_tag_fields_do_not_break_ownership_or_idempotency(self):
         api = FakeZabbix()
@@ -219,7 +219,7 @@ class DeploymentTests(unittest.TestCase):
     def test_pilot_then_full_registration(self):
         names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
                  'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
-                 'grafana01', 'cloudflare01', 'zabbix01']
+                 'grafana01', 'cloudflare01', 'webui01', 'zabbix01']
         hosts = [dict(name=name, ip='192.168.55.' + str(index + 40), psk='ab' * 32)
                  for index, name in enumerate(names)]
         tokens = {name: dict(id='monitor@pve!zabbix', secret='test-only') for name in ['dom', 'dtcode']}
@@ -234,13 +234,13 @@ class DeploymentTests(unittest.TestCase):
         api = FakeZabbix()
         self.assertTrue(registration.reconcile(api, pilot['hosts'], {}))
         self.assertTrue(registration.reconcile(api, hosts, tokens))
-        self.assertEqual(len(api.hosts), 15)
+        self.assertEqual(len(api.hosts), 16)
         self.assertFalse(registration.reconcile(api, hosts, tokens))
 
     def test_full_mode_without_proxmox_tokens_keeps_existing_integration(self):
         names = ['dom', 'dtcode', 'iza', 'dns01', 'home01', 'forgejo01', 'npm01',
                  'tailscale-router', 'mysql01', 'bao01', 'qdrant01', 'langfuse01',
-                 'grafana01', 'cloudflare01', 'zabbix01']
+                 'grafana01', 'cloudflare01', 'webui01', 'zabbix01']
         hosts = [dict(name=name, ip='192.168.55.' + str(index + 40), psk='ab' * 32)
                  for index, name in enumerate(names)]
         registration.validate(dict(mode='full', hosts=hosts, proxmox={}))
@@ -252,7 +252,7 @@ class DeploymentTests(unittest.TestCase):
         # Without tokens: all hosts get the Linux template, nothing Proxmox-related is removed.
         self.assertTrue(registration.reconcile(api, hosts, {}))
         self.assertFalse(registration.reconcile(api, hosts, {}))
-        self.assertEqual(len(api.hosts), 15)
+        self.assertEqual(len(api.hosts), 16)
         dom = api.hosts[0]
         self.assertEqual({t['templateid'] for t in dom['parentTemplates']}, {'10', '11'})
         self.assertEqual(len(dom['macros']), 4)
