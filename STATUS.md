@@ -450,3 +450,8 @@ aktualizacja redirect URI u dostawców OAuth2 to kroki ręczne.
 Testy offline przeszły; Ansible niedostępne lokalnie.
 **Kod przygotowany, nie wdrożono i nie zweryfikowano w infrastrukturze.**
 [Procedura](docs/vms/n8n01.md).
+
+
+## DB-GPT + LiteLLM — przygotowane, niewdrożone
+
+Kod prototypu `dbgpt01` na `dom` jest przygotowany. VMID i IP oczekują zatwierdzenia; nie potwierdzono utworzenia VM, działania aplikacji ani monitoringu. Osobna syntetyczna baza na mysql01 i konto tylko do odczytu są opisane w [instrukcji](docs/dbgpt/README.md). Wdrożenie i testy wyłącznie z iza.

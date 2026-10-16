@@ -1,0 +1,11 @@
+---
+# Additional inventory: load AFTER hosts.yml. Set the approved IP before use.
+all:
+  children:
+    dbgpt_servers:
+      hosts:
+        dbgpt01:
+          ansible_host: "{{ dbgpt01_ip }}"
+    zabbix_agents:
+      hosts:
+        dbgpt01: {}

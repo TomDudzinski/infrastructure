@@ -1,0 +1,40 @@
+---
+- name: Prepare only the synthetic prototype database
+  hosts: mysql01
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require explicit synthetic database setup from iza
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+          - ansible_limit | default('') == 'mysql01'
+          - dbgpt_synthetic_setup_approved | default(false) | bool
+          - hostvars['dbgpt01'].dbgpt01_ip is match('^192\.168\.55\.[0-9]+$')
+          - vault_dbgpt_mysql_password | length >= 24
+      delegate_to: localhost
+      become: false
+      no_log: true
+  tasks:
+    - name: Copy synthetic schema and fixture
+      ansible.builtin.copy:
+        src: ../../docs/dbgpt/seed.sql
+        dest: /tmp/dbgpt-synthetic-seed.sql
+        mode: '0600'
+    - name: Import additive synthetic fixture
+      ansible.mysql.mysql_db:
+        name: dbgpt_synthetic
+        state: import
+        target: /tmp/dbgpt-synthetic-seed.sql
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      when: not ansible_check_mode
+    - name: Create dedicated read-only account restricted to the prototype VM
+      ansible.mysql.mysql_user:
+        name: dbgpt_reader
+        host: "{{ hostvars['dbgpt01'].dbgpt01_ip }}"
+        password: "{{ vault_dbgpt_mysql_password }}"
+        priv: 'dbgpt_synthetic.*:SELECT,SHOW VIEW'
+        append_privs: false
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      no_log: true

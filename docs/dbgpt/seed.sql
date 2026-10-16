@@ -1,0 +1,25 @@
+-- Synthetic data only. Execute explicitly on mysql01; never against a client DB.
+CREATE DATABASE IF NOT EXISTS dbgpt_synthetic CHARACTER SET utf8mb4;
+USE dbgpt_synthetic;
+CREATE TABLE IF NOT EXISTS stays (
+ id INT PRIMARY KEY, name VARCHAR(80) NOT NULL,
+ starts_on DATE NOT NULL, ends_on DATE NOT NULL
+);
+CREATE TABLE IF NOT EXISTS reservations (
+ id INT PRIMARY KEY, stay_id INT NOT NULL, participants INT NOT NULL,
+ FOREIGN KEY (stay_id) REFERENCES stays(id)
+);
+CREATE TABLE IF NOT EXISTS payments (
+ id INT PRIMARY KEY, reservation_id INT NOT NULL, amount DECIMAL(10,2) NOT NULL,
+ FOREIGN KEY (reservation_id) REFERENCES reservations(id)
+);
+-- Relative dates are fixed at first import. Re-import does not reset data.
+INSERT IGNORE INTO stays VALUES
+ (1,'Previous',CURRENT_DATE - INTERVAL 20 DAY,CURRENT_DATE - INTERVAL 13 DAY),
+ (2,'Next 1',CURRENT_DATE + INTERVAL 7 DAY,CURRENT_DATE + INTERVAL 14 DAY),
+ (3,'Next 2',CURRENT_DATE + INTERVAL 21 DAY,CURRENT_DATE + INTERVAL 28 DAY),
+ (4,'Next 3',CURRENT_DATE + INTERVAL 35 DAY,CURRENT_DATE + INTERVAL 42 DAY),
+ (5,'Next 4',CURRENT_DATE + INTERVAL 49 DAY,CURRENT_DATE + INTERVAL 56 DAY),
+ (6,'Next 5',CURRENT_DATE + INTERVAL 63 DAY,CURRENT_DATE + INTERVAL 70 DAY);
+INSERT IGNORE INTO reservations VALUES (1,1,2),(2,1,3),(3,2,4),(4,3,1),(5,4,2),(6,5,3),(7,6,2);
+INSERT IGNORE INTO payments VALUES (1,1,100.00),(2,1,50.00),(3,2,200.00),(4,3,400.00),(5,4,100.00),(6,5,200.00),(7,6,300.00),(8,7,200.00);

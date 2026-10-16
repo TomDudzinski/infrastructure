@@ -1,0 +1,5 @@
+---
+dbgpt_install_dir: /opt/dbgpt
+dbgpt_fast_model: qwen3:4b
+dbgpt_quality_model: qwen3:8b
+dbgpt_embedding_model: qwen3-embedding:0.6b

@@ -1,0 +1,8 @@
+---
+# Required deployment overrides; keep these consistent with Terraform.
+dbgpt01_ip: ""
+dbgpt_ollama_url: http://192.168.55.7:11434
+dbgpt_mysql_host: 192.168.55.21
+# Set immutable image references after reviewing available images on iza.
+dbgpt_image: ""
+dbgpt_litellm_image: ""

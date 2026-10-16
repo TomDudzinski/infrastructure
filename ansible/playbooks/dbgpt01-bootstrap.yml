@@ -1,0 +1,23 @@
+---
+- name: Prepare isolated Text-to-SQL prototype
+  hosts: dbgpt01
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require iza and exactly one explicitly selected target before connecting
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.pipe', 'hostname -s') == 'iza'
+          - ansible_limit | default('') == 'dbgpt01'
+          - dbgpt_deployment_approved | default(false) | bool
+          - dbgpt01_ip is match('^192\.168\.55\.[0-9]+$')
+        fail_msg: Run from iza with --limit dbgpt01 and approved parameters.
+      delegate_to: localhost
+      become: false
+    - name: Gather facts after controller guard
+      ansible.builtin.setup:
+  roles:
+    - qemu_guest_agent
+    - docker_host
+    - dbgpt
+    - zabbix_agent

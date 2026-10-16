@@ -1,0 +1,21 @@
+model_list:
+  - model_name: fast
+    litellm_params:
+      model: {{ ('ollama_chat/' ~ dbgpt_fast_model) | to_json }}
+      api_base: {{ dbgpt_ollama_url | to_json }}
+      temperature: 0
+  - model_name: quality
+    litellm_params:
+      model: {{ ('ollama_chat/' ~ dbgpt_quality_model) | to_json }}
+      api_base: {{ dbgpt_ollama_url | to_json }}
+      temperature: 0
+  - model_name: embeddings
+    litellm_params:
+      model: {{ ('ollama/' ~ dbgpt_embedding_model) | to_json }}
+      api_base: {{ dbgpt_ollama_url | to_json }}
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+litellm_settings:
+  request_timeout: 180
+  num_retries: 0
+  telemetry: false

@@ -1,0 +1,30 @@
+services:
+  litellm:
+    image: {{ dbgpt_litellm_image | to_json }}
+    restart: unless-stopped
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    env_file: .env
+    environment:
+      LITELLM_LOCAL_MODEL_COST_MAP: "True"
+      LITELLM_TELEMETRY: "False"
+    volumes:
+      - ./litellm.yml:/app/config.yaml:ro
+    # Only reachable by DB-GPT on the Compose network.
+  dbgpt:
+    image: {{ dbgpt_image | to_json }}
+    restart: unless-stopped
+    working_dir: /app
+    command: ["dbgpt", "start", "webserver", "--config", "/app/configs/prototype.toml"]
+    env_file: .env
+    depends_on: [litellm]
+    ports:
+      - "127.0.0.1:5670:5670"
+    volumes:
+      - ./dbgpt.toml:/app/configs/prototype.toml:ro
+      - metadata:/app/pilot/meta_data
+      - data:/app/pilot/data
+      - messages:/app/pilot/message
+volumes:
+  metadata:
+  data:
+  messages:

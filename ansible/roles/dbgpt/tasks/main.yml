@@ -1,0 +1,31 @@
+---
+- name: Require reviewed images and Vault secrets
+  ansible.builtin.assert:
+    that:
+      - dbgpt_image is match('^eosphorosai/dbgpt-openai@sha256:[a-f0-9]{64}$')
+      - dbgpt_litellm_image is match('^.*litellm.*@sha256:[a-f0-9]{64}$')
+      - vault_dbgpt_litellm_key is match('^sk-[A-Za-z0-9]{32,}$')
+      - vault_dbgpt_encrypt_key is match('^[A-Za-z0-9]{32}$')
+    quiet: true
+  no_log: true
+- name: Create private application directory
+  ansible.builtin.file:
+    path: "{{ dbgpt_install_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+- name: Render configuration
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ dbgpt_install_dir }}/{{ item }}"
+    mode: '0600'
+  loop: [compose.yml, dbgpt.toml, litellm.yml, .env]
+  no_log: true
+  diff: false
+- name: Start prototype
+  community.docker.docker_compose_v2:
+    project_src: "{{ dbgpt_install_dir }}"
+    files: [compose.yml]
+    state: present
+    pull: missing

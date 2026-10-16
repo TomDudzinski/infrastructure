@@ -303,3 +303,8 @@ Według zgłoszenia operatora (2026-10-13): wdrożona, VMID `208`, `/healthz` HT
 webhooki działają. Zmiana edytora na `n8n.tdcode.pl`: **kod przygotowany, nie wdrożono**
 (wymaga playbooka i trasy tunelu `n8n.tdcode.pl` → `http://192.168.55.31:5678`).
 [Opis i procedura](docs/vms/n8n01.md).
+
+
+## DB-GPT + LiteLLM — przygotowane, niewdrożone
+
+Kod prototypu `dbgpt01` na `dom` jest przygotowany. VMID i IP oczekują zatwierdzenia; nie potwierdzono utworzenia VM, działania aplikacji ani monitoringu. Osobna syntetyczna baza na mysql01 i konto tylko do odczytu są opisane w [instrukcji](docs/dbgpt/README.md). Wdrożenie i testy wyłącznie z iza.
